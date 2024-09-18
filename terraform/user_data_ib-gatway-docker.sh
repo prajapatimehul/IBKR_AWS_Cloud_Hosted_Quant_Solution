@@ -94,7 +94,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 
 # Clone the IB Gateway Docker repository
 #git clone https://github.com/UnusualAlpha/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
-git clone https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
+git clone --branch df7dc62 https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
 # Create a script to fetch parameters from AWS Parameter Store and create .env file
 cat << 'EOF' > /home/ubuntu/create_env_file.sh
 #!/bin/bash
@@ -105,15 +105,61 @@ AWS_REGION="us-east-1"
 # File to write the environment variables
 ENV_FILE="/home/ubuntu/ib-gateway-docker/.env"
 
-# Clear the existing .env file or create a new one
-> $ENV_FILE
+# Function to securely read password
+read_secret() {
+    unset password
+    prompt="$1"
+    while IFS= read -p "$prompt" -r -s -n 1 char
+    do
+        if [[ $char == $'\0' ]];     then
+            break
+        fi
+        if [[ $char == $'\177' ]];  then
+            prompt=$'\b \b'
+            password="${password%?}"
+        else
+            prompt='*'
+            password+="$char"
+        fi
+    done
+    echo
+    echo "$password"
+}
 
-# Fetch parameters from Parameter Store and write to .env file
-echo "TWS_USERID=$(aws ssm get-parameter --name /IB_Gateway/TWS_USERID --with-decryption --query Parameter.Value --output text --region $AWS_REGION)" >> $ENV_FILE
-echo "TWS_PASSWORD=$(aws ssm get-parameter --name /IB_Gateway/TWS_PASSWORD --with-decryption --query Parameter.Value --output text --region $AWS_REGION)" >> $ENV_FILE
-echo "TWS_USERID_PAPER=$(aws ssm get-parameter --name /IB_Gateway/TWS_USERID_PAPER --with-decryption --query Parameter.Value --output text --region $AWS_REGION)" >> $ENV_FILE
-echo "TWS_PASSWORD_PAPER=$(aws ssm get-parameter --name /IB_Gateway/TWS_PASSWORD_PAPER --with-decryption --query Parameter.Value --output text --region $AWS_REGION)" >> $ENV_FILE
-echo "VNC_SERVER_PASSWORD=$(aws ssm get-parameter --name /IB_Gateway/VNC_SERVER_PASSWORD --with-decryption --query Parameter.Value --output text --region $AWS_REGION)" >> $ENV_FILE
+# Function to get parameter from SSM or user input
+get_parameter() {
+    local param_name="$1"
+    local prompt="$2"
+    local value
+
+    # Try to get the parameter from SSM
+    value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region "$AWS_REGION" 2>/dev/null)
+
+    # If the parameter doesn't exist, prompt the user
+    if [ $? -ne 0 ]; then
+        echo "Parameter $param_name not found in SSM. Please enter it manually."
+        if [[ $prompt == *"password"* ]]; then
+            value=$(read_secret "$prompt: ")
+        else
+            read -p "$prompt: " value
+        fi
+
+        # Store the value in SSM for future use
+        aws ssm put-parameter --name "$param_name" --value "$value" --type SecureString --overwrite --region "$AWS_REGION"
+    fi
+
+    echo "$value"
+}
+
+# Clear the existing .env file or create a new one
+> "$ENV_FILE"
+
+# Fetch parameters from Parameter Store or user input and write to .env file
+echo "TWS_USERID=$(get_parameter "/IB_Gateway/TWS_USERID" "Enter TWS_USERID")" >> "$ENV_FILE"
+echo "TWS_PASSWORD=$(get_parameter "/IB_Gateway/TWS_PASSWORD" "Enter TWS_PASSWORD")" >> "$ENV_FILE"
+echo "TWS_USERID_PAPER=$(get_parameter "/IB_Gateway/TWS_USERID_PAPER" "Enter TWS_USERID_PAPER")" >> "$ENV_FILE"
+echo "TWS_PASSWORD_PAPER=$(get_parameter "/IB_Gateway/TWS_PASSWORD_PAPER" "Enter TWS_PASSWORD_PAPER")" >> "$ENV_FILE"
+echo "VNC_SERVER_PASSWORD=$(get_parameter "/IB_Gateway/VNC_SERVER_PASSWORD" "Enter VNC_SERVER_PASSWORD")" >> "$ENV_FILE"
 
 echo ".env file created successfully"
 EOF
