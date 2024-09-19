@@ -1,5 +1,2 @@
-[submodule "ib-gateway-docker"]
-	path = ib-gateway-docker
-	url = https://github.com/gnzsnz/ib-gateway-docker.git
 [submodule "./ib-gateway-docker"]
 	branch = df7dc62
