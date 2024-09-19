@@ -94,7 +94,10 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 
 # Clone the IB Gateway Docker repository
 #git clone https://github.com/UnusualAlpha/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
-git clone --branch df7dc62 https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
+git clone https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
+cd /home/ubuntu/ib-gateway-docker
+git checkout df7dc62
+
 # Create a script to fetch parameters from AWS Parameter Store and create .env file
 cat << 'EOF' > /home/ubuntu/create_env_file.sh
 #!/bin/bash
