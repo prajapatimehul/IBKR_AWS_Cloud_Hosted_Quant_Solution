@@ -95,8 +95,8 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 # Clone the IB Gateway Docker repository
 #git clone https://github.com/UnusualAlpha/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
 git clone https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
-cd /home/ubuntu/ib-gateway-docker
-git checkout df7dc62
+# Create a script to fetch parameters from AWS Parameter Store and create .env file
+#!/bin/bash
 
 # Create a script to fetch parameters from AWS Parameter Store and create .env file
 cat << 'EOF' > /home/ubuntu/create_env_file.sh
@@ -108,61 +108,53 @@ AWS_REGION="us-east-1"
 # File to write the environment variables
 ENV_FILE="/home/ubuntu/ib-gateway-docker/.env"
 
-# Function to securely read password
-read_secret() {
-    unset password
-    prompt="$1"
-    while IFS= read -p "$prompt" -r -s -n 1 char
-    do
-        if [[ $char == $'\0' ]];     then
-            break
-        fi
-        if [[ $char == $'\177' ]];  then
-            prompt=$'\b \b'
-            password="${password%?}"
-        else
-            prompt='*'
-            password+="$char"
-        fi
-    done
-    echo
-    echo "$password"
-}
-
-# Function to get parameter from SSM or user input
-get_parameter() {
-    local param_name="$1"
-    local prompt="$2"
-    local value
-
-    # Try to get the parameter from SSM
-    value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region "$AWS_REGION" 2>/dev/null)
-
-    # If the parameter doesn't exist, prompt the user
-    if [ $? -ne 0 ]; then
-        echo "Parameter $param_name not found in SSM. Please enter it manually."
-        if [[ $prompt == *"password"* ]]; then
-            value=$(read_secret "$prompt: ")
-        else
-            read -p "$prompt: " value
-        fi
-
-        # Store the value in SSM for future use
-        aws ssm put-parameter --name "$param_name" --value "$value" --type SecureString --overwrite --region "$AWS_REGION"
-    fi
-
-    echo "$value"
-}
-
 # Clear the existing .env file or create a new one
-> "$ENV_FILE"
+> $ENV_FILE
 
-# Fetch parameters from Parameter Store or user input and write to .env file
-echo "TWS_USERID=$(get_parameter "/IB_Gateway/TWS_USERID" "Enter TWS_USERID")" >> "$ENV_FILE"
-echo "TWS_PASSWORD=$(get_parameter "/IB_Gateway/TWS_PASSWORD" "Enter TWS_PASSWORD")" >> "$ENV_FILE"
-echo "TWS_USERID_PAPER=$(get_parameter "/IB_Gateway/TWS_USERID_PAPER" "Enter TWS_USERID_PAPER")" >> "$ENV_FILE"
-echo "TWS_PASSWORD_PAPER=$(get_parameter "/IB_Gateway/TWS_PASSWORD_PAPER" "Enter TWS_PASSWORD_PAPER")" >> "$ENV_FILE"
-echo "VNC_SERVER_PASSWORD=$(get_parameter "/IB_Gateway/VNC_SERVER_PASSWORD" "Enter VNC_SERVER_PASSWORD")" >> "$ENV_FILE"
+# Function to fetch parameter and write to .env file
+fetch_and_write_param() {
+    local param_name=$1
+    local env_var_name=$2
+    value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region $AWS_REGION 2>/dev/null)
+    if [ $? -eq 0 ] && [ ! -z "$value" ]; then
+        echo "$env_var_name=$value" >> $ENV_FILE
+    fi
+}
+
+# Main parameters
+fetch_and_write_param "/IB_Gateway/TWS_USERID" "TWS_USERID"
+fetch_and_write_param "/IB_Gateway/TWS_PASSWORD" "TWS_PASSWORD"
+fetch_and_write_param "/IB_Gateway/TRADING_MODE" "TRADING_MODE"
+fetch_and_write_param "/IB_Gateway/VNC_SERVER_PASSWORD" "VNC_SERVER_PASSWORD"
+fetch_and_write_param "/IB_Gateway/JUPYTER_TOKEN" "JUPYTER_TOKEN"
+
+# Advanced parameters
+fetch_and_write_param "/IB_Gateway/TWS_SETTINGS_PATH" "TWS_SETTINGS_PATH"
+fetch_and_write_param "/IB_Gateway/TWS_ACCEPT_INCOMING" "TWS_ACCEPT_INCOMING"
+fetch_and_write_param "/IB_Gateway/READ_ONLY_API" "READ_ONLY_API"
+fetch_and_write_param "/IB_Gateway/TWOFA_TIMEOUT_ACTION" "TWOFA_TIMEOUT_ACTION"
+fetch_and_write_param "/IB_Gateway/BYPASS_WARNING" "BYPASS_WARNING"
+fetch_and_write_param "/IB_Gateway/AUTO_RESTART_TIME" "AUTO_RESTART_TIME"
+fetch_and_write_param "/IB_Gateway/AUTO_LOGOFF_TIME" "AUTO_LOGOFF_TIME"
+fetch_and_write_param "/IB_Gateway/TWS_COLD_RESTART" "TWS_COLD_RESTART"
+fetch_and_write_param "/IB_Gateway/SAVE_TWS_SETTINGS" "SAVE_TWS_SETTINGS"
+fetch_and_write_param "/IB_Gateway/RELOGIN_AFTER_TWOFA_TIMEOUT" "RELOGIN_AFTER_TWOFA_TIMEOUT"
+fetch_and_write_param "/IB_Gateway/TWOFA_EXIT_INTERVAL" "TWOFA_EXIT_INTERVAL"
+fetch_and_write_param "/IB_Gateway/TWOFA_DEVICE" "TWOFA_DEVICE"
+fetch_and_write_param "/IB_Gateway/EXISTING_SESSION_DETECTED_ACTION" "EXISTING_SESSION_DETECTED_ACTION"
+fetch_and_write_param "/IB_Gateway/ALLOW_BLIND_TRADING" "ALLOW_BLIND_TRADING"
+fetch_and_write_param "/IB_Gateway/TIME_ZONE" "TIME_ZONE"
+fetch_and_write_param "/IB_Gateway/CUSTOM_CONFIG" "CUSTOM_CONFIG"
+fetch_and_write_param "/IB_Gateway/JAVA_HEAP_SIZE" "JAVA_HEAP_SIZE"
+fetch_and_write_param "/IB_Gateway/SSH_TUNNEL" "SSH_TUNNEL"
+fetch_and_write_param "/IB_Gateway/SSH_OPTIONS" "SSH_OPTIONS"
+fetch_and_write_param "/IB_Gateway/SSH_ALIVE_INTERVAL" "SSH_ALIVE_INTERVAL"
+fetch_and_write_param "/IB_Gateway/SSH_ALIVE_COUNT" "SSH_ALIVE_COUNT"
+fetch_and_write_param "/IB_Gateway/SSH_PASSPHRASE" "SSH_PASSPHRASE"
+fetch_and_write_param "/IB_Gateway/SSH_REMOTE_PORT" "SSH_REMOTE_PORT"
+fetch_and_write_param "/IB_Gateway/SSH_USER_TUNNEL" "SSH_USER_TUNNEL"
+fetch_and_write_param "/IB_Gateway/SSH_RESTART" "SSH_RESTART"
+fetch_and_write_param "/IB_Gateway/SSH_VNC_PORT" "SSH_VNC_PORT"
 
 echo ".env file created successfully"
 EOF
@@ -172,6 +164,10 @@ chmod +x /home/ubuntu/create_env_file.sh
 
 # Run the script to create .env file
 /home/ubuntu/create_env_file.sh
+
+# Optionally, remove the script after execution
+# rm /home/ubuntu/create_env_file.sh
+
 
 # Run docker-compose
 cd /home/ubuntu/ib-gateway-docker
