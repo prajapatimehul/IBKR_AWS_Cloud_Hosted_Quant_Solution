@@ -1,3 +1,4 @@
+version: '3'
 name: algo-trader
 services:
   ib-gateway:
@@ -41,12 +42,25 @@ services:
       SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
-    #    volumes:
-    #      - ${PWD}/jts.ini:/home/ibgateway/Jts/jts.ini
-    #      - ${PWD}/config.ini:/home/ibgateway/ibc/config.ini
-    #      - ${PWD}/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
-    #      - ${PWD}/ssh/:/home/ibgateway/.ssh
     ports:
       - "127.0.0.1:4001:4003"
       - "127.0.0.1:4002:4004"
       - "127.0.0.1:5900:5900"
+
+  jupyter:
+    image: jupyter/datascience-notebook:latest
+    container_name: jupyter-notebook
+    ports:
+      - "8888:8888"  # Changed to allow external access
+    volumes:
+      - ./jupyter-work:/home/jovyan/work
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
+    command: start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''
+    depends_on:
+      - ib-gateway
+
+networks:
+  default:
+    name: algo-trader-network
