@@ -52,19 +52,22 @@ services:
     image: jupyter/datascience-notebook:latest
     container_name: jupyter-notebook
     ports:
-      - "8888:8888"  # Changed to allow external access
+      - "8888:8888"
     volumes:
       - ./jupyter-work:/home/jovyan/work
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
     command: >
-      bash -c "pip install ibapi &&
-              bash /home/jovyan/work/setup_cron.sh &&
-              start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
+      bash -c "
+      echo '#!/bin/bash
+      # Add your cron jobs here
+      # For example:
+      # (crontab -l 2>/dev/null; echo \"0 2 * * * /path/to/your/script.sh\") | crontab -
+      echo \"Cron setup complete\"' > /home/jovyan/work/setup_cron.sh &&
+      chmod +x /home/jovyan/work/setup_cron.sh &&
+      pip install ibapi &&
+      bash /home/jovyan/work/setup_cron.sh &&
+      start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
     depends_on:
       - ib-gateway
-
-networks:
-  default:
-    name: algo-trader-network
