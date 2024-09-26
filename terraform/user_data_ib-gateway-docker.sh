@@ -92,11 +92,21 @@ EOT
 # Restart CloudWatch Agent to apply new configuration
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
-# Clone the IB Gateway Docker repository
-#git clone https://github.com/UnusualAlpha/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
-git clone https://github.com/gnzsnz/ib-gateway-docker.git /home/ubuntu/ib-gateway-docker
-# Create a script to fetch parameters from AWS Parameter Store and create .env file
-#!/bin/bash
+# Change to the directory where you want to store your project
+cd /home/ubuntu
+
+# Clone the repository (you'll need access to the repository, if it's private)
+git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
+
+# Move to the desired folder and copy it to the desired location
+cd IBKR_AWS_Cloud_Hosted_Quant_Solution
+cp -r ib-gateway-docker /home/ubuntu/ib-gateway-docker
+
+# Clean up the rest of the repository if you don't need it
+rm -rf /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
+
+# Additional steps if needed for Docker setup or configuration
+cd /home/ubuntu/ib-gateway-docker
 
 # Create a script to fetch parameters from AWS Parameter Store and create .env file
 cat << 'EOF' > /home/ubuntu/create_env_file.sh
@@ -169,6 +179,69 @@ chmod +x /home/ubuntu/create_env_file.sh
 # rm /home/ubuntu/create_env_file.sh
 mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
 chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
+
+
+EBS_DEVICE="/dev/nvme1n1"  # Adjust if necessary
+MOUNT_POINT="/docker_data"
+
+# Function to log messages
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a /var/log/ebs-mount.log
+}
+
+log "Starting EBS volume setup"
+
+# Wait for the EBS volume to be attached
+while [ ! -e $EBS_DEVICE ]; do
+    log "Waiting for EBS volume to be attached..."
+    sleep 5
+done
+
+log "EBS device detected: $EBS_DEVICE"
+
+# Check if the volume is already formatted
+if ! blkid $EBS_DEVICE; then
+    log "Volume is not formatted. Formatting with ext4."
+    mkfs -t ext4 $EBS_DEVICE
+else
+    log "Volume is already formatted. Skipping format."
+fi
+
+# Create mount point
+mkdir -p $MOUNT_POINT
+
+# Add fstab entry if not already present
+if ! grep -q $MOUNT_POINT /etc/fstab; then
+    log "Adding fstab entry"
+    echo "$EBS_DEVICE $MOUNT_POINT ext4 defaults,nofail 0 2" | tee -a /etc/fstab
+else
+    log "Fstab entry already exists"
+fi
+
+# Mount the volume
+if ! mount | grep -q $MOUNT_POINT; then
+    log "Mounting volume"
+    mount $MOUNT_POINT
+else
+    log "Volume already mounted"
+fi
+
+# Configure Docker to use the EBS volume for its data
+mkdir -p $MOUNT_POINT/docker
+if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
+    log "Configuring Docker to use EBS volume"
+    cat << EOF > /etc/docker/daemon.json
+{
+    "data-root": "$MOUNT_POINT/docker"
+}
+EOF
+    log "Restarting Docker"
+    systemctl restart docker
+else
+    log "Docker already configured to use EBS volume"
+fi
+
+log "EBS volume setup complete"
 
 # Run docker-compose
 cd /home/ubuntu/ib-gateway-docker

@@ -122,5 +122,5 @@ def main():
     else:
         print("No changes were made.")
 
-if __name__ == "__main__":
+if __name__ == "__main__"
     main()

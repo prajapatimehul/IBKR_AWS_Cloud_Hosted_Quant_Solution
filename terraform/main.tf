@@ -72,6 +72,14 @@ resource "aws_security_group" "docker_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+#for testing 8888 is being used with 0.0.0.0/0ta
+  ingress {
+    from_port   = 8888
+    to_port     = 8888
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   
   ingress {
     from_port   = 80
@@ -176,13 +184,17 @@ resource "aws_instance" "docker" {
   subnet_id              = aws_subnet.main[0].id  # Use the first subnet
   iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
   
-  user_data = file("${path.module}/user_data_ib-gatway-docker.sh")
-  #user_data = file("${path.module}/1_user_data_ib-gatway-docker.sh")
-
+  user_data = file("${path.module}/user_data_ib-gateway-docker.sh")
   tags = {
     Name = "DockerInstance"
   }
 }
+
+# resource "aws_volume_attachment" "docker_data_att" {
+#   device_name = "/dev/xvdf"
+#   volume_id   = aws_ebs_volume.docker_data.id
+#   instance_id = aws_instance.docker.id
+# }
 
 # Allocate a new Elastic IP
 resource "aws_eip" "docker_eip" {
@@ -192,6 +204,15 @@ resource "aws_eip" "docker_eip" {
   tags = {
     Name = "IB-Gateway-EIP"
   }
+}
+output "ebs_volume_id" {
+  value = aws_ebs_volume.docker_data.id
+  description = "ID of the EBS volume for Docker data"
+}
+
+output "ebs_volume_arn" {
+  value = aws_ebs_volume.docker_data.arn
+  description = "ARN of the EBS volume for Docker data"
 }
 
 output "eip_public_ip" {

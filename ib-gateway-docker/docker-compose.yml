@@ -43,9 +43,11 @@ services:
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
     ports:
-      - "127.0.0.1:4001:4003"
-      - "127.0.0.1:4002:4004"
-      - "127.0.0.1:5900:5900"
+      - "127.0.0.1:5900:5900"  
+    expose:
+      - "4003"  
+      - "4004"  
+
 
   jupyter:
     image: jupyter/datascience-notebook:latest
@@ -57,7 +59,10 @@ services:
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
-    command: start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''
+    command: >
+        bash -c "pip install ibapi &&
+                bash /home/jovyan/work/setup_cron.sh &&
+                start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
     depends_on:
       - ib-gateway
 
