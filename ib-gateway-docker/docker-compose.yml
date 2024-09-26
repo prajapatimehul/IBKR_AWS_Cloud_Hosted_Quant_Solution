@@ -48,7 +48,6 @@ services:
       - "4003"  
       - "4004"  
 
-
   jupyter:
     image: jupyter/datascience-notebook:latest
     container_name: jupyter-notebook
@@ -60,9 +59,9 @@ services:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
     command: >
-        bash -c "pip install ibapi &&
-                bash /home/jovyan/work/setup_cron.sh &&
-                start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
+      bash -c "pip install ibapi &&
+              bash /home/jovyan/work/setup_cron.sh &&
+              start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
     depends_on:
       - ib-gateway
 

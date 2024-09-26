@@ -205,15 +205,6 @@ resource "aws_eip" "docker_eip" {
     Name = "IB-Gateway-EIP"
   }
 }
-output "ebs_volume_id" {
-  value = aws_ebs_volume.docker_data.id
-  description = "ID of the EBS volume for Docker data"
-}
-
-output "ebs_volume_arn" {
-  value = aws_ebs_volume.docker_data.arn
-  description = "ARN of the EBS volume for Docker data"
-}
 
 output "eip_public_ip" {
   value = aws_eip.docker_eip.public_ip
