@@ -4,8 +4,10 @@
 
 ## What is it?
 
-A docker image to run Interactive Brokers Gateway and TWS without any human
-interaction on a docker container
+This is a copy of much of Emanuel Fernandes work to provide a docker image to run Interactive Brokers Gateway and TWS without any human
+interaction on a docker container.. 
+
+The additions are another container running JupyterLab and hosting the two conrtaners on an AWS EC2 instance so they're always connected.  
 
 It includes:
 
@@ -44,65 +46,9 @@ All tags are available in the container repository for [ib-gateway][1] and [tws-
 
 ## How to use it?
 
-For the two images available, [ib-gateway][1] and [tws-rdesktop][2], you can use the sample docker compose files as a starting point.
+Follow the steps in main Readme
 
-Create a `docker-compose.yml` file (or include ib-gateway services on your existing one). The sample files provided can be used as starting point, [ib-gateway compose](https://github.com/gnzsnz/ib-gateway-docker/blob/master/docker-compose.yml) and [tws-rdesktop compose](https://github.com/gnzsnz/ib-gateway-docker/blob/master/tws-docker-compose.yml).
 
-Looking for help? Please go to [discussion](https://github.com/gnzsnz/ib-gateway-docker/discussions) section for common problems and solutions.
-
-```yaml
-name: algo-trader
-services:
-  ib-gateway:
-    restart: always
-    build:
-      context: ./stable
-      tags:
-        - "ghcr.io/gnzsnz/ib-gateway:stable"
-    image: ghcr.io/gnzsnz/ib-gateway:stable
-    environment:
-      TWS_USERID: ${TWS_USERID}
-      TWS_PASSWORD: ${TWS_PASSWORD}
-      TRADING_MODE: ${TRADING_MODE:-paper}
-      TWS_SETTINGS_PATH: ${TWS_SETTINGS_PATH:-}
-      TWS_ACCEPT_INCOMING: ${TWS_ACCEPT_INCOMING:-}
-      READ_ONLY_API: ${READ_ONLY_API:-}
-      VNC_SERVER_PASSWORD: ${VNC_SERVER_PASSWORD:-}
-      TWOFA_TIMEOUT_ACTION: ${TWOFA_TIMEOUT_ACTION:-exit}
-      BYPASS_WARNING: ${BYPASS_WARNING:-}
-      AUTO_RESTART_TIME: ${AUTO_RESTART_TIME:-}
-      AUTO_LOGOFF_TIME: ${AUTO_LOGOFF_TIME:-}
-      TWS_COLD_RESTART: ${TWS_COLD_RESTART:-}
-      SAVE_TWS_SETTINGS: ${SAVE_TWS_SETTINGS:-}
-      RELOGIN_AFTER_TWOFA_TIMEOUT: ${RELOGIN_AFTER_TWOFA_TIMEOUT:-no}
-      TWOFA_EXIT_INTERVAL: ${TWOFA_EXIT_INTERVAL:-60}
-      TWOFA_DEVICE: ${TWOFA_DEVICE:-}
-      EXISTING_SESSION_DETECTED_ACTION: ${EXISTING_SESSION_DETECTED_ACTION:-primary}
-      ALLOW_BLIND_TRADING: ${ALLOW_BLIND_TRADING:-no}
-      TIME_ZONE: ${TIME_ZONE:-Etc/UTC}
-      TZ: ${TIME_ZONE:-Etc/UTC}
-      CUSTOM_CONFIG: ${CUSTOM_CONFIG:-NO}
-      JAVA_HEAP_SIZE: ${JAVA_HEAP_SIZE:-}
-      SSH_TUNNEL: ${SSH_TUNNEL:-}
-      SSH_OPTIONS: ${SSH_OPTIONS:-}
-      SSH_ALIVE_INTERVAL: ${SSH_ALIVE_INTERVAL:-}
-      SSH_ALIVE_COUNT: ${SSH_ALIVE_COUNT:-}
-      SSH_PASSPHRASE: ${SSH_PASSPHRASE:-}
-      SSH_REMOTE_PORT: ${SSH_REMOTE_PORT:-}
-      SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
-      SSH_RESTART: ${SSH_RESTART:-}
-      SSH_VNC_PORT: ${SSH_VNC_PORT:-}
-#    volumes:
-#      - ${PWD}/jts.ini:/home/ibgateway/Jts/jts.ini
-#      - ${PWD}/config.ini:/home/ibgateway/ibc/config.ini
-#      - ${PWD}/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
-#      - ${PWD}/ssh/:/home/ibgateway/.ssh
-    ports:
-      - "127.0.0.1:4001:4003"
-      - "127.0.0.1:4002:4004"
-      - "127.0.0.1:5900:5900"
-
-```
 
 All environment variables are common between ibgateway and TWS image, unless specifically stated. The container can be configured with the following environment variables:
 
