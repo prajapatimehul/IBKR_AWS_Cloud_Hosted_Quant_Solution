@@ -1,5 +1,6 @@
 # Data source to find the existing volume
 data "aws_ebs_volume" "existing_docker_data" {
+  count = 1
   most_recent = true
 
   filter {
@@ -20,24 +21,20 @@ data "aws_ebs_volume" "existing_docker_data" {
 
 # EBS volume resource
 resource "aws_ebs_volume" "docker_data" {
-  availability_zone = data.aws_ebs_volume.existing_docker_data.availability_zone
-  size              = data.aws_ebs_volume.existing_docker_data.size
+  count             = length(data.aws_ebs_volume.existing_docker_data) == 0 ? 1 : 0
+  availability_zone = aws_subnet.main[0].availability_zone
+  size              = 50  # Default size, adjust as needed
   type              = "gp3"
   encrypted         = true
 
   tags = {
     Name = "DockerDataVolume"
   }
-
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = [size, type, encrypted, tags]
-  }
 }
 
 # Volume attachment
 resource "aws_volume_attachment" "docker_data_att" {
   device_name = "/dev/xvdf"
-  volume_id   = aws_ebs_volume.docker_data.id
+  volume_id   = length(data.aws_ebs_volume.existing_docker_data) > 0 ? data.aws_ebs_volume.existing_docker_data[0].id : aws_ebs_volume.docker_data[0].id
   instance_id = aws_instance.docker.id
 }
