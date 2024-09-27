@@ -54,16 +54,18 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ./jupyter-work:/home/jovyan/quant_files
+      - ./jupyter-work:/home/jovyan/work
       - ./setup_cron.sh:/home/jovyan/setup_cron.sh
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
+    user: root
     command: >
       bash -c "
+      chown jovyan:users /home/jovyan/setup_cron.sh &&
       chmod +x /home/jovyan/setup_cron.sh &&
       pip install ibapi &&
-      bash /home/jovyan/setup_cron.sh &&
+      su jovyan -c 'bash /home/jovyan/setup_cron.sh' &&
       start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
     depends_on:
       - ib-gateway
