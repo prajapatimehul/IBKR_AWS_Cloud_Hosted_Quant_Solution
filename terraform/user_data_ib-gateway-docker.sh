@@ -178,8 +178,8 @@ chmod +x /home/ubuntu/create_env_file.sh
 
 # Optionally, remove the script after execution
 # rm /home/ubuntu/create_env_file.sh
-mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
-chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
+#mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
+#chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
 
 
 
