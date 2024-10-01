@@ -51,6 +51,7 @@ services:
   jupyter-quant:
     image: gnzsnz/jupyter-quant:${IMAGE_VERSION:-latest}
     container_name: jupyter-notebook
+    user: jovyan
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
@@ -61,7 +62,11 @@ services:
     ports:
       - "8888:8888"
     command: >
-      start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''
+      bash -c "
+      jupyter lab --ip 0.0.0.0 --no-browser --allow-root
+      --NotebookApp.token='${JUPYTER_TOKEN:-}' 
+      --NotebookApp.password='' 
+      --ContentsManager.allow_hidden=True"
     depends_on:
       - ib-gateway
 
