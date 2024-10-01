@@ -252,6 +252,11 @@ fi
 
 log "EBS volume setup complete"
 
+sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work
+sudo chown -R 1001:1001 /docker_data/jupyter
+sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work
+
+
 # Run docker-compose
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
