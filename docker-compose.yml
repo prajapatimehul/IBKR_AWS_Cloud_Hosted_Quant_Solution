@@ -54,25 +54,25 @@ services:
     user: root  # Temporarily use root to set up the new user
     environment:
       - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
       - TZ=${QUANT_TZ:-America/New_York}
     volumes:
       - /docker_data/jupyter/config:/home/quant/.jupyter
       - /docker_data/jupyter/work:/home/quant/work
     ports:
-      - "8888:8888"
+      - "8888:8888"  # Optional: Restrict to localhost if needed
     command: >
       bash -c "
-      groupadd -g 1000 quant &&
-      useradd -m -s /bin/bash -u 1000 -g 1000 quant &&
+      id -u quant &>/dev/null || groupadd -g 1000 quant &&
+      id -u quant &>/dev/null || useradd -m -s /bin/bash -u 1000 -g 1000 quant &&
       chown -R quant:quant /home/quant &&
+      chown -R quant:quant /docker_data/jupyter/config /docker_data/jupyter/work &&
       su quant -c 'jupyter lab --ip 0.0.0.0 --no-browser
       --NotebookApp.token=\"${JUPYTER_TOKEN:-}\" 
       --NotebookApp.password=\"\" 
       --ContentsManager.allow_hidden=True'"
     depends_on:
       - ib-gateway
-
 networks:
   default:
     name: algo-trader-network
