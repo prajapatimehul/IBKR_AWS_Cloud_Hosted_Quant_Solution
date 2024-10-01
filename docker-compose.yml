@@ -49,24 +49,27 @@ services:
       - "4004"  
 
   jupyter-quant:
-    image: gnzsnz/jupyter-quant:${IMAGE_VERSION:-latest}
+    image: gnzsnz/jupyter-quant:latest
     container_name: jupyter-notebook
-    user: jovyan
+    user: root  # Temporarily use root to set up the new user
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
       - TZ=${QUANT_TZ:-America/New_York}
     volumes:
-      - /docker_data/jupyter/config:/home/jovyan/.jupyter
-      - /docker_data/jupyter/work:/home/jovyan/work
+      - /docker_data/jupyter/config:/home/quant/.jupyter
+      - /docker_data/jupyter/work:/home/quant/work
     ports:
       - "8888:8888"
     command: >
       bash -c "
-      jupyter lab --ip 0.0.0.0 --no-browser --allow-root
-      --NotebookApp.token='${JUPYTER_TOKEN:-}' 
-      --NotebookApp.password='' 
-      --ContentsManager.allow_hidden=True"
+      groupadd -g 1000 quant &&
+      useradd -m -s /bin/bash -u 1000 -g 1000 quant &&
+      chown -R quant:quant /home/quant &&
+      su quant -c 'jupyter lab --ip 0.0.0.0 --no-browser
+      --NotebookApp.token=\"${JUPYTER_TOKEN:-}\" 
+      --NotebookApp.password=\"\" 
+      --ContentsManager.allow_hidden=True'"
     depends_on:
       - ib-gateway
 
