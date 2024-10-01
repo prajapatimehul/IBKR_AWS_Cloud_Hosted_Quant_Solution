@@ -48,24 +48,23 @@ services:
       - "4003"  
       - "4004"  
 
-  jupyter:
-    image: jupyter/datascience-notebook:latest
+  jupyter-quant:
+    image: gnzsnz/jupyter-quant:${IMAGE_VERSION:-latest}
     container_name: jupyter-notebook
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./jupyter-work:/home/jovyan/work
-      - ./setup_cron.sh:/home/jovyan/setup_cron.sh
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
-    user: root
+      - TZ=${QUANT_TZ:-America/New_York}
+    volumes:
+      - /docker_data/jupyter/config:/home/jovyan/.jupyter
+      - /docker_data/jupyter/work:/home/jovyan/work
+    ports:
+      - "8888:8888"
     command: >
-      bash -c "
-      chown jovyan:users /home/jovyan/setup_cron.sh &&
-      chmod +x /home/jovyan/setup_cron.sh &&
-      pip install ibapi &&
-      su jovyan -c 'bash /home/jovyan/setup_cron.sh' &&
-      start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''"
+      start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN:-}' --NotebookApp.password=''
     depends_on:
       - ib-gateway
+
+networks:
+  default:
+    name: algo-trader-network

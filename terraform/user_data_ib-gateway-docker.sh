@@ -99,14 +99,14 @@ cd /home/ubuntu
 git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
 
 # Move to the desired folder and copy it to the desired location
-cd IBKR_AWS_Cloud_Hosted_Quant_Solution
-cp -r ib-gateway-docker /home/ubuntu/ib-gateway-docker
+cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
+#cp -r ib-gateway-docker /home/ubuntu/ib-gateway-docker
 
 # Clean up the rest of the repository if you don't need it
-rm -rf /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
+#rm -rf /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
 # Additional steps if needed for Docker setup or configuration
-cd /home/ubuntu/ib-gateway-docker
+#cd /home/ubuntu/ib-gateway-docker
 
 # Create a script to fetch parameters from AWS Parameter Store and create .env file
 cat << 'EOF' > /home/ubuntu/create_env_file.sh
@@ -116,7 +116,8 @@ cat << 'EOF' > /home/ubuntu/create_env_file.sh
 AWS_REGION="us-east-1"
 
 # File to write the environment variables
-ENV_FILE="/home/ubuntu/ib-gateway-docker/.env"
+#ENV_FILE="/home/ubuntu/ib-gateway-docker/.env"
+ENV_FILE="/home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution/.env"
 
 # Clear the existing .env file or create a new one
 > $ENV_FILE
@@ -181,6 +182,8 @@ mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
 chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
 
 
+
+# EBS device and mount point
 EBS_DEVICE="/dev/nvme1n1"  # Adjust if necessary
 MOUNT_POINT="/docker_data"
 
@@ -226,8 +229,14 @@ else
     log "Volume already mounted"
 fi
 
+# Create directories for Docker and Jupyter
+mkdir -p $MOUNT_POINT/docker $MOUNT_POINT/jupyter/work $MOUNT_POINT/jupyter/config
+
+# Set permissions (adjust as needed for security)
+chown -R 1000:1000 $MOUNT_POINT/jupyter
+chmod 755 $MOUNT_POINT/jupyter $MOUNT_POINT/jupyter/work $MOUNT_POINT/jupyter/config
+
 # Configure Docker to use the EBS volume for its data
-mkdir -p $MOUNT_POINT/docker
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
     log "Configuring Docker to use EBS volume"
     cat << EOF > /etc/docker/daemon.json
@@ -244,7 +253,7 @@ fi
 log "EBS volume setup complete"
 
 # Run docker-compose
-cd /home/ubuntu/ib-gateway-docker
+cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
 
 #sudo sed -i '/^name: algo-trader$/d' docker-compose.yml
