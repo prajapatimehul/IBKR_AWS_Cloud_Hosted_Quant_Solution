@@ -9,16 +9,16 @@ ENV USER=${USER}
 USER root
 RUN usermod -l ${USER} gordon && \
     usermod -d /home/${USER} -m ${USER} && \
-    groupmod -n ${USER} gordon
+    groupmod -n ${USER} gordon && \
+    sed -i "s/gordon/${USER}/g" /etc/sudoers
 
 # Update environment variables
 ENV HOME="/home/${USER}"
 ENV BASE_DATA="/home/${USER}/.local"
 ENV BASE_CONFIG="/home/${USER}/.config"
-ENV XDG_CACHE_HOME="${BASE_DATA}/cache"
-ENV XDG_CONFIG_HOME="${BASE_CONFIG}"
-ENV XDG_DATA_HOME="${BASE_DATA}/share"
-ENV XDG_STATE_HOME="${BASE_DATA}/state"
+ENV PATH="$PATH:/home/${USER}/.local/bin"
+
+# Update Jupyter-specific environment variables
 ENV IPYTHONDIR="${BASE_CONFIG}/ipython"
 ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter"
 ENV JUPYTER_DATA_DIR="${BASE_DATA}/share/jupyter"
@@ -26,12 +26,13 @@ ENV JUPYTERLAB_DIR="${BASE_DATA}/share/jupyter/lab"
 ENV JUPYTERLAB_SETTINGS_DIR="${JUPYTER_CONFIG_DIR}/lab/user-settings"
 ENV JUPYTERLAB_WORKSPACES_DIR="${JUPYTER_CONFIG_DIR}/lab/workspaces"
 ENV JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
-ENV MPLCONFIGDIR="${BASE_CONFIG}/matplotlib"
-ENV PATH="/home/${USER}/.local/bin:${PATH}"
-ENV PYTHONUSERBASE="/home/${USER}/.local"
 
-# Install ibapi package
-RUN pip install --no-cache-dir ibapi
+# Update other environment variables
+ENV XDG_CACHE_HOME="${BASE_DATA}/cache"
+ENV XDG_CONFIG_HOME="${BASE_CONFIG}"
+ENV XDG_DATA_HOME="${BASE_DATA}/share"
+ENV XDG_STATE_HOME="${BASE_DATA}/state"
+ENV MPLCONFIGDIR="${BASE_CONFIG}/matplotlib"
 
 # Ensure correct permissions
 RUN chown -R ${USER}:${USER} /home/${USER}
@@ -41,3 +42,6 @@ USER ${USER}
 
 # Set the working directory
 WORKDIR ${JUPYTER_SERVER_ROOT}
+
+# The CMD and ENTRYPOINT are inherited from the base image, 
+# so we don't need to specify them again unless we want to change them

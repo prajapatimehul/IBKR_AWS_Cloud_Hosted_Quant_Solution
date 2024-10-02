@@ -256,13 +256,16 @@ sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work
 sudo chown -R 1000:1000 /docker_data/jupyter
 sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work
 
+if [ -d /home/ubuntu/.docker ]; then
+    sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
+fi
 
 # Run docker-compose
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
 
 #sudo sed -i '/^name: algo-trader$/d' docker-compose.yml
-docker build -t jupyter-quant -f ./jupyter-quant/Dockerfile.custom ./jupyter-quant
+#docker build -t jupyter-quant -f ./jupyter-quant/Dockerfile.custom ./jupyter-quant
 
 docker-compose up -d > compose_output.log 2>&1
 
