@@ -1,0 +1,34 @@
+# Use the original image as the base
+FROM gnzsnz/jupyter-quant:latest
+
+# Set the new username
+ARG USER=quant
+ENV USER=${USER}
+
+# Update the user settings
+USER root
+RUN usermod -l ${USER} gordon && \
+    usermod -d /home/${USER} -m ${USER} && \
+    groupmod -n ${USER} gordon
+
+# Update environment variables
+ENV BASE_DATA="/home/${USER}/.local"
+ENV BASE_CONFIG="/home/${USER}/.config"
+ENV XDG_CACHE_HOME="${BASE_DATA}/cache"
+ENV XDG_CONFIG_HOME="${BASE_CONFIG}"
+ENV XDG_DATA_HOME="${BASE_DATA}/share "
+ENV XDG_STATE_HOME="${BASE_DATA}/state"
+ENV IPYTHONDIR="${BASE_CONFIG}/ipython"
+ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter"
+ENV JUPYTER_DATA_DIR="${BASE_DATA}/share/jupyter"
+ENV JUPYTERLAB_DIR="${BASE_DATA}/share/jupyter/lab"
+ENV JUPYTERLAB_SETTINGS_DIR="${JUPYTER_CONFIG_DIR}/lab/user-settings"
+ENV JUPYTERLAB_WORKSPACES_DIR="${JUPYTER_CONFIG_DIR}/lab/workspaces"
+ENV JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
+ENV MPLCONFIGDIR="${BASE_CONFIG}/matplotlib"
+
+# Switch back to the new user
+USER ${USER}
+
+# Set the working directory
+WORKDIR ${JUPYTER_SERVER_ROOT}
