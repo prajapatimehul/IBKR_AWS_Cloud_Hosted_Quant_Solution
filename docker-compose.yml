@@ -48,21 +48,14 @@ services:
       - "4003"  
       - "4004"  
 
- jupyter-quant:
-    build:
-      context: ./jupyter-quant  # Set the build context to the jupyter-quant directory
-      dockerfile: Dockerfile.custom  
-      args:
-        - IMG_PYTHON_VERSION=3.9  # Adjust this version as needed
-        - USER_ID=1000
-        - USER_GID=1000
-        - USER=quant  # Add this line to set the username to 'quant'
+  jupyter-quant:
+    image: jupyter-quant  # Use the pre-built image
     container_name: jupyter-notebook
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
       - TZ=${QUANT_TZ:-America/New_York}
-      - USER=quant  # Add this line to ensure the environment variable is set
+      - USER=quant
     volumes:
       - /docker_data/jupyter/config:/home/quant/.config/jupyter
       - /docker_data/jupyter/work:/home/quant/Notebooks
