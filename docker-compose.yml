@@ -67,15 +67,12 @@ services:
     ports:
       - "8888:8888"
     user: quant
-    command: >
-      bash -c "
-        jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
-      "
+    command: jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
 
 volumes:
   quant_conf:
   quant_data:
-  
+
 networks:
   default:
     name: algo-trader-network

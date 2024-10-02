@@ -5,8 +5,10 @@ FROM gnzsnz/jupyter-quant:latest
 ARG USER=quant
 ENV USER=${USER}
 
-# Update the user settings
+# Switch to root to make changes
 USER root
+
+# Update the user settings
 RUN usermod -l ${USER} gordon && \
     usermod -d /home/${USER} -m ${USER} && \
     groupmod -n ${USER} gordon && \
@@ -25,9 +27,6 @@ RUN mkdir -p ${JUPYTER_SERVER_ROOT} ${BASE_CONFIG}/jupyter ${BASE_DATA}/share/ju
     chmod -R 755 ${BASE_CONFIG} ${BASE_DATA} && \
     sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh && \
     echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc
-
-# Build JupyterLab
-RUN jupyter lab build
 
 # Switch to the quant user
 USER ${USER}
