@@ -22,8 +22,12 @@ ENV HOME="/home/${USER}" \
 # Ensure correct permissions and setup
 RUN chown -R ${USER}:${USER} /home/${USER} && \
     sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh && \
-    echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc && \
-    echo 'if [ ! -L "${JUPYTER_SERVER_ROOT}/.lsp_symlink" ] && [ -w "${JUPYTER_SERVER_ROOT}" ]; then ln -s / "${JUPYTER_SERVER_ROOT}/.lsp_symlink"; fi' >> /home/${USER}/.bashrc
+    echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc
+
+# Create the .lsp_symlink during build
+RUN mkdir -p ${JUPYTER_SERVER_ROOT} && \
+    ln -s / ${JUPYTER_SERVER_ROOT}/.lsp_symlink && \
+    chown -R ${USER}:${USER} ${JUPYTER_SERVER_ROOT}
 
 # Switch back to the new user and set the working directory
 USER ${USER}
