@@ -252,16 +252,11 @@ fi
 
 log "EBS volume setup complete"
 
-# Ensure proper permissions for Docker
-log "Setting up Docker permissions"
+log "Setting up Docker and Jupyter permissions"
 sudo usermod -aG docker ubuntu
-sudo systemctl restart docker
-
-# Create necessary directories with correct permissions
-log "Creating and setting permissions for Jupyter directories"
 sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
 sudo chown -R 1000:1000 /docker_data/jupyter
-sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
+sudo chmod 775 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
 
 # Ensure Docker daemon socket has correct permissions
 log "Setting Docker socket permissions"
@@ -272,7 +267,6 @@ log "Setting up .docker directory"
 sudo mkdir -p /home/ubuntu/.docker
 sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
 sudo chmod 700 /home/ubuntu/.docker
-
 
 
 # Run docker-compose
