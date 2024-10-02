@@ -49,23 +49,26 @@ services:
       - "4004"  
 
   jupyter-quant:
-    image: jupyter-quant  # Use the pre-built image
+    build:
+      context: ./jupyter-quant
+      dockerfile: Dockerfile.custom
+      args:
+        - USER=quant
     container_name: jupyter-notebook
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
       - TZ=${QUANT_TZ:-America/New_York}
       - USER=quant
+      - HOME=/home/quant
+      - PYTHONUSERBASE=/home/quant/.local
     volumes:
       - /docker_data/jupyter/config:/home/quant/.config/jupyter
       - /docker_data/jupyter/work:/home/quant/Notebooks
+      - /docker_data/jupyter/local:/home/quant/.local
     ports:
       - "8888:8888"
-    user: "1000:1000"
+    user: "quant"
     command: ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--NotebookApp.token=${JUPYTER_TOKEN:-}", "--NotebookApp.password=", "--ContentsManager.allow_hidden=True"]
     depends_on:
       - ib-gateway
-
-networks:
-  default:
-    name: algo-trader-network

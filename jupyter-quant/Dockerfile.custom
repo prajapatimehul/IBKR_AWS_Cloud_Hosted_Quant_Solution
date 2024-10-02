@@ -12,11 +12,12 @@ RUN usermod -l ${USER} gordon && \
     groupmod -n ${USER} gordon
 
 # Update environment variables
+ENV HOME="/home/${USER}"
 ENV BASE_DATA="/home/${USER}/.local"
 ENV BASE_CONFIG="/home/${USER}/.config"
 ENV XDG_CACHE_HOME="${BASE_DATA}/cache"
 ENV XDG_CONFIG_HOME="${BASE_CONFIG}"
-ENV XDG_DATA_HOME="${BASE_DATA}/share "
+ENV XDG_DATA_HOME="${BASE_DATA}/share"
 ENV XDG_STATE_HOME="${BASE_DATA}/state"
 ENV IPYTHONDIR="${BASE_CONFIG}/ipython"
 ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter"
@@ -26,6 +27,14 @@ ENV JUPYTERLAB_SETTINGS_DIR="${JUPYTER_CONFIG_DIR}/lab/user-settings"
 ENV JUPYTERLAB_WORKSPACES_DIR="${JUPYTER_CONFIG_DIR}/lab/workspaces"
 ENV JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
 ENV MPLCONFIGDIR="${BASE_CONFIG}/matplotlib"
+ENV PATH="/home/${USER}/.local/bin:${PATH}"
+ENV PYTHONUSERBASE="/home/${USER}/.local"
+
+# Install ibapi package
+RUN pip install --no-cache-dir ibapi
+
+# Ensure correct permissions
+RUN chown -R ${USER}:${USER} /home/${USER}
 
 # Switch back to the new user
 USER ${USER}
