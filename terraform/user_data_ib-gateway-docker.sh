@@ -262,7 +262,7 @@ cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
 
 #sudo sed -i '/^name: algo-trader$/d' docker-compose.yml
-
+docker build -t jupyter-quant -f ./jupyter-quant/Dockerfile.custom ./jupyter-quant
 
 docker-compose up -d > compose_output.log 2>&1
 
