@@ -59,7 +59,6 @@ services:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
       - TZ=${QUANT_TZ:-America/New_York}
-      - PATH=/home/quant/.local/bin:$PATH
     volumes:
       - quant_conf:/home/quant/.config
       - quant_data:/home/quant/.local
@@ -67,12 +66,19 @@ services:
     ports:
       - "8888:8888"
     user: "quant"
-    command: ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--NotebookApp.token=${JUPYTER_TOKEN:-}", "--NotebookApp.password=", "--ContentsManager.allow_hidden=True"]
+    command: >
+      bash -c "
+        if [ ! -w /home/quant/Notebooks ]; then
+          echo 'Notebooks directory is not writable. Changing permissions...'
+          sudo chown -R quant:quant /home/quant/Notebooks
+        fi &&
+        jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
+      "
 
 volumes:
   quant_conf:
   quant_data:
-  
+
 networks:
   default:
     name: algo-trader-network

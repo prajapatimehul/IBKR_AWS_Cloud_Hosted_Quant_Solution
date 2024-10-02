@@ -16,17 +16,14 @@ RUN usermod -l ${USER} gordon && \
 ENV HOME="/home/${USER}" \
     BASE_DATA="/home/${USER}/.local" \
     BASE_CONFIG="/home/${USER}/.config" \
-    PATH="/home/${USER}/.local/bin:$PATH"
-
-# Update Jupyter-specific environment variables
-ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter" \
-    JUPYTER_DATA_DIR="${BASE_DATA}/share/jupyter" \
+    PATH="/home/${USER}/.local/bin:$PATH" \
     JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
 
 # Ensure correct permissions and setup
 RUN chown -R ${USER}:${USER} /home/${USER} && \
     sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh && \
-    echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc
+    echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc && \
+    echo 'if [ ! -L "${JUPYTER_SERVER_ROOT}/.lsp_symlink" ] && [ -w "${JUPYTER_SERVER_ROOT}" ]; then ln -s / "${JUPYTER_SERVER_ROOT}/.lsp_symlink"; fi' >> /home/${USER}/.bashrc
 
 # Switch back to the new user and set the working directory
 USER ${USER}

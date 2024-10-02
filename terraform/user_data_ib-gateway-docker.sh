@@ -252,13 +252,28 @@ fi
 
 log "EBS volume setup complete"
 
-sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work
-sudo chown -R 1000:1000 /docker_data/jupyter
-sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work
+# Ensure proper permissions for Docker
+log "Setting up Docker permissions"
+sudo usermod -aG docker ubuntu
+sudo systemctl restart docker
 
-if [ -d /home/ubuntu/.docker ]; then
-    sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
-fi
+# Create necessary directories with correct permissions
+log "Creating and setting permissions for Jupyter directories"
+sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
+sudo chown -R 1000:1000 /docker_data/jupyter
+sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
+
+# Ensure Docker daemon socket has correct permissions
+log "Setting Docker socket permissions"
+sudo chmod 666 /var/run/docker.sock
+
+# Create .docker directory with correct permissions
+log "Setting up .docker directory"
+sudo mkdir -p /home/ubuntu/.docker
+sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
+sudo chmod 700 /home/ubuntu/.docker
+
+
 
 # Run docker-compose
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
@@ -267,7 +282,8 @@ cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 #sudo sed -i '/^name: algo-trader$/d' docker-compose.yml
 #docker build -t jupyter-quant -f ./jupyter-quant/Dockerfile.custom ./jupyter-quant
 
-docker-compose up -d > compose_output.log 2>&1
+log "Running docker-compose"
+sudo -u ubuntu docker-compose up -d > compose_output.log 2>&1
 
 # Message indicating that setup is complete
 echo "Docker, Git, and CloudWatch Agent installed, repository cloned. Docker container should be running."
