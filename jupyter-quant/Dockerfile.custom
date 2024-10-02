@@ -13,37 +13,23 @@ RUN usermod -l ${USER} gordon && \
     sed -i "s/gordon/${USER}/g" /etc/sudoers
 
 # Update environment variables
-ENV HOME="/home/${USER}"
-ENV BASE_DATA="/home/${USER}/.local"
-ENV BASE_CONFIG="/home/${USER}/.config"
-ENV PATH="/home/${USER}/.local/bin:$PATH"
+ENV HOME="/home/${USER}" \
+    BASE_DATA="/home/${USER}/.local" \
+    BASE_CONFIG="/home/${USER}/.config" \
+    PATH="/home/${USER}/.local/bin:$PATH"
 
 # Update Jupyter-specific environment variables
-ENV IPYTHONDIR="${BASE_CONFIG}/ipython"
-ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter"
-ENV JUPYTER_DATA_DIR="${BASE_DATA}/share/jupyter"
-ENV JUPYTERLAB_DIR="${BASE_DATA}/share/jupyter/lab"
-ENV JUPYTERLAB_SETTINGS_DIR="${JUPYTER_CONFIG_DIR}/lab/user-settings"
-ENV JUPYTERLAB_WORKSPACES_DIR="${JUPYTER_CONFIG_DIR}/lab/workspaces"
-ENV JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
+ENV JUPYTER_CONFIG_DIR="${BASE_CONFIG}/jupyter" \
+    JUPYTER_DATA_DIR="${BASE_DATA}/share/jupyter" \
+    JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
 
-# Update other environment variables
-ENV XDG_CACHE_HOME="${BASE_DATA}/cache"
-ENV XDG_CONFIG_HOME="${BASE_CONFIG}"
-ENV XDG_DATA_HOME="${BASE_DATA}/share"
-ENV XDG_STATE_HOME="${BASE_DATA}/state"
-ENV MPLCONFIGDIR="${BASE_CONFIG}/matplotlib"
+# Ensure correct permissions and setup
+RUN chown -R ${USER}:${USER} /home/${USER} && \
+    sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh && \
+    echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc
 
-# Ensure correct permissions
-RUN chown -R ${USER}:${USER} /home/${USER}
-
-# Make sure the entrypoint script uses bash
-RUN sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh
-
-# Switch back to the new user
+# Switch back to the new user and set the working directory
 USER ${USER}
-
-# Set the working directory
 WORKDIR ${JUPYTER_SERVER_ROOT}
 
 # Override the entrypoint to ensure PATH is set correctly

@@ -61,16 +61,18 @@ services:
       - TZ=${QUANT_TZ:-America/New_York}
       - PATH=/home/quant/.local/bin:$PATH
     volumes:
-      - /docker_data/jupyter/config:/home/quant/.config/jupyter
-      - /docker_data/jupyter/work:/home/quant/Notebooks
-      - /docker_data/jupyter/local:/home/quant/.local
+      - quant_conf:/home/quant/.config
+      - quant_data:/home/quant/.local
+      - ${PWD}/Notebooks:/home/quant/Notebooks
     ports:
       - "8888:8888"
     user: "quant"
     command: ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--NotebookApp.token=${JUPYTER_TOKEN:-}", "--NotebookApp.password=", "--ContentsManager.allow_hidden=True"]
-    depends_on:
-      - ib-gateway
 
+volumes:
+  quant_conf:
+  quant_data:
+  
 networks:
   default:
     name: algo-trader-network
