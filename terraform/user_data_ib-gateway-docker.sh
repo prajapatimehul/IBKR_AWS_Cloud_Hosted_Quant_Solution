@@ -253,7 +253,7 @@ fi
 log "EBS volume setup complete"
 
 sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work
-sudo chown -R 1001:1001 /docker_data/jupyter
+sudo chown -R 1000:1000 /docker_data/jupyter
 sudo chmod 755 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work
 
 

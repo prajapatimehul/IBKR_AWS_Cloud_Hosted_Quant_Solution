@@ -48,32 +48,31 @@ services:
       - "4003"  
       - "4004"  
 
-  jupyter-quant:
-    image: gnzsnz/jupyter-quant:latest
+ jupyter-quant:
+    build:
+      context: ./jupyter-quant  # Set the build context to the jupyter-quant directory
+      dockerfile: Dockerfile.custom  
+      args:
+        - IMG_PYTHON_VERSION=3.9  # Adjust this version as needed
+        - USER_ID=1000
+        - USER_GID=1000
+        - USER=quant  # Add this line to set the username to 'quant'
     container_name: jupyter-notebook
-    user: root  # Temporarily use root to set up the new user
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
       - TZ=${QUANT_TZ:-America/New_York}
+      - USER=quant  # Add this line to ensure the environment variable is set
     volumes:
-      - /docker_data/jupyter/config:/home/quant/.jupyter
-      - /docker_data/jupyter/work:/home/quant/work
+      - /docker_data/jupyter/config:/home/quant/.config/jupyter
+      - /docker_data/jupyter/work:/home/quant/Notebooks
     ports:
-      - "8888:8888"  # Optional: Restrict to localhost if needed
-    command: >
-      bash -c "
-      mkdir -p /home/quant/.jupyter /home/quant/work &&
-      id -u quant &>/dev/null || groupadd -g 1001 quant &&
-      id -u quant &>/dev/null || useradd -m -s /bin/bash -u 1001 -g 1001 quant &&
-      chown -R quant:quant /home/quant &&
-      chown -R quant:quant /home/quant/.jupyter /home/quant/work &&
-      su quant -c 'jupyter lab --ip 0.0.0.0 --no-browser
-      --NotebookApp.token=\"${JUPYTER_TOKEN:-}\" 
-      --NotebookApp.password=\"\" 
-      --ContentsManager.allow_hidden=True'"
+      - "8888:8888"
+    user: "1000:1000"
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--NotebookApp.token=${JUPYTER_TOKEN:-}", "--NotebookApp.password=", "--ContentsManager.allow_hidden=True"]
     depends_on:
       - ib-gateway
+
 networks:
   default:
     name: algo-trader-network
