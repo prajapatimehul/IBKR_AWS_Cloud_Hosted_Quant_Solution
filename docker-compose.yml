@@ -66,11 +66,10 @@ services:
       - ${PWD}/Notebooks:/home/quant/Notebooks
     ports:
       - "8888:8888"
-    user: root
+    user: root  # We'll keep this as root for now to avoid other potential permission issues
     command: >
       bash -c "
         chown -R quant:quant /home/quant &&
-        ln -sf / /home/quant/Notebooks/.lsp_symlink &&
         jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
       "
 
