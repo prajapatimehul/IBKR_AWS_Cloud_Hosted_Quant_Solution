@@ -66,17 +66,11 @@ services:
       - ${PWD}/Notebooks:/home/quant/Notebooks
     ports:
       - "8888:8888"
-    user: "quant"
+    user: root
     command: >
       bash -c "
-        if [ ! -w /home/quant/Notebooks ]; then
-          echo 'Notebooks directory is not writable. Changing permissions...'
-          sudo chown -R quant:quant /home/quant/Notebooks
-        fi &&
-        if [ ! -L /home/quant/Notebooks/.lsp_symlink ]; then
-          echo 'Attempting to create .lsp_symlink...'
-          ln -s / /home/quant/Notebooks/.lsp_symlink || echo 'Failed to create .lsp_symlink, but continuing...'
-        fi &&
+        chown -R quant:quant /home/quant &&
+        ln -sf / /home/quant/Notebooks/.lsp_symlink &&
         jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
       "
 
