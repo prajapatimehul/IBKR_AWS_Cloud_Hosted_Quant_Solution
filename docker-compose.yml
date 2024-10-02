@@ -66,17 +66,16 @@ services:
       - ${PWD}/Notebooks:/home/quant/Notebooks
     ports:
       - "8888:8888"
-    user: root  # We'll keep this as root for now to avoid other potential permission issues
+    user: quant
     command: >
       bash -c "
-        chown -R quant:quant /home/quant &&
         jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
       "
 
 volumes:
   quant_conf:
   quant_data:
-
+  
 networks:
   default:
     name: algo-trader-network

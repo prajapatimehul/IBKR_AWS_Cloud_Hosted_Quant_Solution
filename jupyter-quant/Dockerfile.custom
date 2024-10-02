@@ -20,20 +20,19 @@ ENV HOME="/home/${USER}" \
     JUPYTER_SERVER_ROOT="/home/${USER}/Notebooks"
 
 # Ensure correct permissions and setup
-RUN chown -R ${USER}:${USER} /home/${USER} && \
+RUN mkdir -p ${JUPYTER_SERVER_ROOT} ${BASE_CONFIG}/jupyter ${BASE_DATA}/share/jupyter && \
+    chown -R ${USER}:${USER} /home/${USER} && \
+    chmod -R 755 ${BASE_CONFIG} ${BASE_DATA} && \
     sed -i '1s|^.*$|#!/bin/bash|' /entrypoint.sh && \
     echo 'export PATH="/home/${USER}/.local/bin:$PATH"' >> /home/${USER}/.bashrc
 
-# Create the .lsp_symlink during build
-RUN mkdir -p ${JUPYTER_SERVER_ROOT} && \
-    ln -s / ${JUPYTER_SERVER_ROOT}/.lsp_symlink && \
-    chown -R ${USER}:${USER} ${JUPYTER_SERVER_ROOT}
+# Build JupyterLab
+RUN jupyter lab build
 
-# Switch back to the new user and set the working directory
+# Switch to the quant user
 USER ${USER}
+
+# Set the working directory
 WORKDIR ${JUPYTER_SERVER_ROOT}
 
-# Override the entrypoint to ensure PATH is set correctly
-ENTRYPOINT ["/bin/bash", "-c", "source ~/.bashrc && /entrypoint.sh \"$@\"", "--"]
-
-# The CMD is inherited from the base image
+# The ENTRYPOINT and CMD will be handled by docker-compose
