@@ -43,20 +43,18 @@ services:
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
     ports:
-      - "127.0.0.1:5900:5900"  
+      - "127.0.0.1:5900:5900"
     expose:
-      - "4003"  
-      - "4004"  
+      - "4003"
+      - "4004"
 
-  
   jupyter-quant:
     image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
     environment:
-      - USER_NAME=${JUPYTER_USER:-quant}  
+      - USER_NAME=${JUPYTER_USER:-quant}
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - TZ=${QUANT_TZ:-America/New_York}
-
     restart: always
     ports:
       - "${QUANT_PORT:-8888}:8888"
@@ -67,7 +65,7 @@ services:
     command: >
       /bin/bash -c "
       pip install --user --no-cache-dir ibapi &&
-      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}'
       "
 
 networks:
