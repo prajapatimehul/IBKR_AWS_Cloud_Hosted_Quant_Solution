@@ -50,28 +50,25 @@ services:
 
   
   jupyter-quant:
-    build:
-      context: ./jupyter-quant
-      dockerfile: Dockerfile.custom
-      args:
-        - USER=quant
-    container_name: jupyter-notebook
+    image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
     environment:
+      - USER_NAME=${JUPYTER_USER:-quant}  
       - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-default_token_here}
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - TZ=${QUANT_TZ:-America/New_York}
-    volumes:
-      - quant_conf:/home/quant/.config
-      - quant_data:/home/quant/.local
-      - ${PWD}/Notebooks:/home/quant/Notebooks
-    ports:
-      - "8888:8888"
-    user: quant
-    command: jupyter lab --ip=0.0.0.0 --no-browser --NotebookApp.token=${JUPYTER_TOKEN:-} --NotebookApp.password= --ContentsManager.allow_hidden=True
 
-volumes:
-  quant_conf:
-  quant_data:
+    restart: always
+    ports:
+      - "${QUANT_PORT:-8888}:8888"
+    volumes:
+      - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-quant}/.config
+      - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-quant}/.local
+      - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
+    command: >
+      /bin/bash -c "
+      pip install --user --no-cache-dir ibapi &&
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}
+      "
 
 networks:
   default:
