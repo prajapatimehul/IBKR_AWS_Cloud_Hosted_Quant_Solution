@@ -64,7 +64,6 @@ services:
       - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
     command: >
       /bin/bash -c "
-      apt-get update && apt-get install -y netcat &&
       pip install --user --no-cache-dir ibapi &&
       jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}'
       "
