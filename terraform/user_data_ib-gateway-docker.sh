@@ -181,6 +181,14 @@ chmod +x /home/ubuntu/create_env_file.sh
 #mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
 #chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
 
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
+# Create SSL directory and generate self-signed certificate
+sudo mkdir -p /etc/ssl/certs
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/certs/self-signed.key \
+    -out /etc/ssl/certs/self-signed.pem \
+    -subj "/C=US/ST=NewYork/L=NewYork/O=ExampleOrg/OU=IT/CN=${PUBLIC_IP}"
 
 
 # EBS device and mount point

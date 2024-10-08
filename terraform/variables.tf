@@ -3,6 +3,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "my_ip" {
+  description = "The IP address or range to allow SSH and HTTPS access from"
+  type        = string
+  default     = "0.0.0.0/0"  # Default to open (this can be changed to any dummy IP)
+}
+
 variable "key_name" {
   description = "The name of the SSH key pair"
   default     = "deploy-key_IB_gateway"

@@ -66,7 +66,7 @@ services:
       - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
     command: >
       /bin/bash -c "
-      pip install --user --no-cache-dir ibapi &&
+      pip install --user --no-cache-dir ibapi apscheduler &&
       jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}'
       "
 

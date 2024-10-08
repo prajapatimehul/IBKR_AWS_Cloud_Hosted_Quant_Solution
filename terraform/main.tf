@@ -64,42 +64,28 @@ resource "aws_key_pair" "deployer" {
 resource "aws_security_group" "docker_sg" {
   vpc_id      = aws_vpc.main.id
   name        = "docker-sg"
-  description = "Allow SSH and HTTP inbound traffic"
-  
+  description = "Allow SSH and HTTPS inbound traffic from specified IP address or range"
+
+  # Allow SSH (port 22)
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.my_ip]
   }
 
-#for testing 8888 is being used with 0.0.0.0/0ta
+  # Allow HTTPS (port 443)
   ingress {
-    from_port   = 8888
-    to_port     = 8888
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.my_ip]
   }
-  
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    from_port   = 4000
-    to_port     = 4000
-    protocol    = "tcp"
-    cidr_blocks = ["${var.your_home_ip}/0"]
-  }
-  
   ingress {
     from_port   = 5900
     to_port     = 5900
     protocol    = "tcp"
-    cidr_blocks = ["${var.your_home_ip}/0"]
+    cidr_blocks = [var.my_ip]
   }
   egress {
     from_port   = 0
@@ -107,8 +93,8 @@ resource "aws_security_group" "docker_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
 
+}
 resource "aws_iam_role" "ssm_role_IB" {
   name = "ssm_role_IB"
 
