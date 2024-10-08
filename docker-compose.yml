@@ -43,7 +43,7 @@ services:
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
     ports:
-      - "127.0.0.1:5900:5900"  # VNC server port, bound to localhost
+      - "5900:5900"            # VNC server port
       - "4003:4003"            # External port 4003 mapped to internal 4001 through socat
       - "4004:4004"            # External port 4004 mapped to internal 4002 through socat
     expose:
@@ -59,15 +59,17 @@ services:
       - TZ=${QUANT_TZ:-America/New_York}
     restart: always
     ports:
-      - "${QUANT_PORT:-8888}:8888"
+      - "443:8888"  # Expose HTTPS on port 443, mapped from internal port 8888
     volumes:
+      - /etc/ssl/certs:/certs:ro  # Mount the EC2's certificate directory as read-only
       - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-quant}/.config
       - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-quant}/.local
       - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
     command: >
       /bin/bash -c "
       pip install --user --no-cache-dir ibapi apscheduler &&
-      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}'
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' 
+      --certfile=/certs/self-signed.pem --keyfile=/certs/self-signed.key
       "
 
 networks:

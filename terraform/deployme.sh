@@ -102,7 +102,7 @@ terraform apply -var="my_ip=${IP_CIDR}"
 echo "Deployment complete! Security group is configured with IP/CIDR: $IP_CIDR"
 
 
-echo -e "${YELLOW}Starting Terraform deployment...${NC}"
+echo -e "${YELLOW}Finished Terraform deployment...${NC}"
 
 # # Initialize Terraform
 # echo -e "\n${YELLOW}Initializing Terraform...${NC}"

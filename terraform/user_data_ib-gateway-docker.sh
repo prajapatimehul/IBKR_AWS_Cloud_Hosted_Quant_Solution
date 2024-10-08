@@ -181,16 +181,6 @@ chmod +x /home/ubuntu/create_env_file.sh
 #mkdir /home/ubuntu/ib-gateway-docker/jupyter-work
 #chmod 777 /home/ubuntu/ib-gateway-docker/jupyter-work
 
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-
-# Create SSL directory and generate self-signed certificate
-sudo mkdir -p /etc/ssl/certs
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/ssl/certs/self-signed.key \
-    -out /etc/ssl/certs/self-signed.pem \
-    -subj "/C=US/ST=NewYork/L=NewYork/O=ExampleOrg/OU=IT/CN=${PUBLIC_IP}"
-
-
 # EBS device and mount point
 EBS_DEVICE="/dev/nvme1n1"  # Adjust if necessary
 MOUNT_POINT="/docker_data"
@@ -276,16 +266,38 @@ sudo mkdir -p /home/ubuntu/.docker
 sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
 sudo chmod 700 /home/ubuntu/.docker
 
+# Fetch the public IP address of the EC2 instance
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
-# Run docker-compose
+# Log the public IP address for verification
+echo "Public IP Address: ${PUBLIC_IP}"
+
+# Create SSL directory and generate self-signed certificate
+sudo mkdir -p /etc/ssl/certs
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/certs/self-signed.key \
+    -out /etc/ssl/certs/self-signed.pem \
+    -subj "/C=US/ST=NewYork/L=NewYork/O=ExampleOrg/OU=IT/CN=${PUBLIC_IP}"
+
+# Set permissions to ensure that the ubuntu user can access the certificates
+sudo chmod 644 /etc/ssl/certs/self-signed.*
+sudo chown -R ubuntu:ubuntu /etc/ssl/certs
+
+# Log the certificate generation
+echo "Self-signed certificate created and permissions set."
+
+# Navigate to the directory containing the docker-compose.yml file
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 
+# Run Docker Compose as the ubuntu user
+log "Running docker-compose as ubuntu user"
+sudo -u ubuntu docker-compose up -d > /home/ubuntu/compose_output.log 2>&1
 
-#sudo sed -i '/^name: algo-trader$/d' docker-compose.yml
-#docker build -t jupyter-quant -f ./jupyter-quant/Dockerfile.custom ./jupyter-quant
+# Log completion
+echo "Docker Compose has been started with Jupyter and IB Gateway services."
 
-log "Running docker-compose"
-sudo -u ubuntu docker-compose up -d > compose_output.log 2>&1
+
 
 # Message indicating that setup is complete
 echo "Docker, Git, and CloudWatch Agent installed, repository cloned. Docker container should be running."
