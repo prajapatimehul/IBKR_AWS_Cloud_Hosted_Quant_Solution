@@ -43,10 +43,12 @@ services:
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
     ports:
-      - "127.0.0.1:5900:5900"
+      - "127.0.0.1:5900:5900"  # VNC server port, bound to localhost
+      - "4003:4003"            # External port 4003 mapped to internal 4001 through socat
+      - "4004:4004"            # External port 4004 mapped to internal 4002 through socat
     expose:
-      - "4001"
-      - "4002"
+      - "4001"                 # Internal API port for live accounts
+      - "4002"                 # Internal API port for paper accounts
 
   jupyter-quant:
     image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
