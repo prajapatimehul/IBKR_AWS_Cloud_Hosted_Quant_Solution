@@ -266,13 +266,11 @@ sudo mkdir -p /home/ubuntu/.docker
 sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
 sudo chmod 700 /home/ubuntu/.docker
 
-# Fetch the public IP address of the EC2 instance
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+# Set the public IP address provided by Terraform (placeholder to be replaced)
+PUBLIC_IP="${PUBLIC_IP}"
 
-# Log the public IP address for verification
-echo "Public IP Address: ${PUBLIC_IP}"
-
-# Create SSL directory and generate self-signed certificate
+# Create SSL directory and generate self-signed certificate using the EIP
+echo "Creating SSL directory and generating self-signed certificate for IP: ${PUBLIC_IP}"
 sudo mkdir -p /etc/ssl/certs
 
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -284,8 +282,7 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 sudo chmod 644 /etc/ssl/certs/self-signed.*
 sudo chown -R ubuntu:ubuntu /etc/ssl/certs
 
-# Log the certificate generation
-echo "Self-signed certificate created and permissions set."
+echo "Self-signed certificate created for IP: ${PUBLIC_IP}"
 
 # Navigate to the directory containing the docker-compose.yml file
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution

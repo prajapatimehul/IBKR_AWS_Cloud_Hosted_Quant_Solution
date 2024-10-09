@@ -63,7 +63,7 @@ read -p "Enter your choice (1/2/3): " choice
 case $choice in
   1)
     # Default: Use the current public IP address
-    MY_IP=$(curl -s ifconfig.me)
+    MY_IP=$(curl -4 -s ifconfig.me)
     IP_CIDR="${MY_IP}/32"
     echo "Your current IP address ($MY_IP) will be used for the security group."
     ;;
@@ -84,7 +84,7 @@ case $choice in
   *)
     # Invalid choice, use the current IP as default
     echo "Invalid choice. Defaulting to use your current IP address."
-    MY_IP=$(curl -s ifconfig.me)
+    MY_IP=$(curl -4 -s ifconfig.me)
     IP_CIDR="${MY_IP}/32"
     echo "Your current IP address ($MY_IP) will be used for the security group."
     ;;

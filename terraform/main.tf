@@ -170,7 +170,9 @@ resource "aws_instance" "docker" {
   subnet_id              = aws_subnet.main[0].id  # Use the first subnet
   iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
   
-  user_data = file("${path.module}/user_data_ib-gateway-docker.sh")
+  user_data = templatefile("${path.module}/user_data_ib-gateway-docker.sh", {
+  PUBLIC_IP = aws_eip.docker_eip.public_ip
+})
   tags = {
     Name = "DockerInstance"
   }
