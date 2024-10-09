@@ -54,14 +54,13 @@ services:
     image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
     environment:
       - USER_NAME=${JUPYTER_USER:-quant}
-      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_ENABLE_LAB=yesii
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - TZ=${QUANT_TZ:-America/New_York}
-    restart: always
+    restart: alwaysopenssl x509 -in /etc/ssl/certs/self-signed.pem -text -noout
     ports:
-      - "443:8888"  # Expose HTTPS on port 443, mapped from internal port 8888
+      - "8888:8888"  
     volumes:
-      - /etc/ssl/certs:/certs:ro  # Mount the EC2's certificate directory as read-only
       - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-quant}/.config
       - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-quant}/.local
       - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
@@ -69,7 +68,6 @@ services:
       /bin/bash -c "
       pip install --user --no-cache-dir ibapi apscheduler &&
       jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' 
-      --certfile=/certs/self-signed.pem --keyfile=/certs/self-signed.key
       "
 
 networks:

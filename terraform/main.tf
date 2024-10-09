@@ -162,13 +162,30 @@ resource "aws_iam_instance_profile" "ssm_instance_profile" {
   role = aws_iam_role.ssm_role_IB.name
 }
 
+# Create a new Elastic Network Interface (ENI)
+resource "aws_network_interface" "docker_eni" {
+  subnet_id       = aws_subnet.main[0].id
+  security_groups = [aws_security_group.docker_sg.id]
+
+  tags = {
+    Name = "Docker-ENI"
+  }
+}
+
+
+# Create the EC2 Instance and Attach to the ENI
 resource "aws_instance" "docker" {
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  key_name               = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.docker_sg.id]
-  subnet_id              = aws_subnet.main[0].id  # Use the first subnet
-  iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
+  ami                  = var.ami_id
+  instance_type        = var.instance_type
+  key_name             = aws_key_pair.deployer.key_name
+  iam_instance_profile = aws_iam_instance_profile.ssm_instance_profile.name
+
+  # Attach the EC2 instance to the ENI using the network_interface block
+  network_interface {
+    network_interface_id = aws_network_interface.docker_eni.id
+    device_index         = 0
+  }
+
   
   user_data = templatefile("${path.module}/user_data_ib-gateway-docker.sh", {
   PUBLIC_IP = aws_eip.docker_eip.public_ip
@@ -178,21 +195,29 @@ resource "aws_instance" "docker" {
   }
 }
 
+# Allocate a new Elastic IP without direct instance association
+resource "aws_eip" "docker_eip" {
+  domain      = "vpc"
+
+  tags = {
+    Name = "IB-Gateway-EIP"
+  }
+}
 # resource "aws_volume_attachment" "docker_data_att" {
 #   device_name = "/dev/xvdf"
 #   volume_id   = aws_ebs_volume.docker_data.id
 #   instance_id = aws_instance.docker.id
 # }
 
-# Allocate a new Elastic IP
-resource "aws_eip" "docker_eip" {
-  domain      = "vpc"
-  instance = aws_instance.docker.id
+# OLd Allocate a new Elastic IP
+# resource "aws_eip" "docker_eip" {
+#   domain      = "vpc"
+#   instance = aws_instance.docker.id
 
-  tags = {
-    Name = "IB-Gateway-EIP"
-  }
-}
+#   tags = {
+#     Name = "IB-Gateway-EIP"
+#   }
+# }
 
 output "eip_public_ip" {
   value = aws_eip.docker_eip.public_ip
