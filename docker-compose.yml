@@ -5,8 +5,6 @@ services:
     restart: always
     build:
       context: ./latest
-      tags:
-        - "ghcr.io/gnzsnz/ib-gateway:latest"
     image: ghcr.io/gnzsnz/ib-gateway:latest
     environment:
       TWS_USERID: ${TWS_USERID}
@@ -54,12 +52,12 @@ services:
     image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
     environment:
       - USER_NAME=${JUPYTER_USER:-quant}
-      - JUPYTER_ENABLE_LAB=yesii
+      - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - TZ=${QUANT_TZ:-America/New_York}
-    restart: alwaysopenssl x509 -in /etc/ssl/certs/self-signed.pem -text -noout
+    restart: always
     ports:
-      - "8888:8888"  
+      - "8888:8888"            # Map host port 8888 to container port 8888 for HTTP access
     volumes:
       - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-quant}/.config
       - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-quant}/.local

@@ -81,6 +81,14 @@ resource "aws_security_group" "docker_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.my_ip]
   }
+
+  # Allow HTTP (port 80)
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
   ingress {
     from_port   = 5900
     to_port     = 5900
@@ -173,31 +181,31 @@ resource "aws_network_interface" "docker_eni" {
 }
 
 
-# Create the EC2 Instance and Attach to the ENI
 resource "aws_instance" "docker" {
   ami                  = var.ami_id
   instance_type        = var.instance_type
   key_name             = aws_key_pair.deployer.key_name
   iam_instance_profile = aws_iam_instance_profile.ssm_instance_profile.name
 
-  # Attach the EC2 instance to the ENI using the network_interface block
   network_interface {
     network_interface_id = aws_network_interface.docker_eni.id
     device_index         = 0
   }
 
-  
   user_data = templatefile("${path.module}/user_data_ib-gateway-docker.sh", {
-  PUBLIC_IP = aws_eip.docker_eip.public_ip
-})
+    PUBLIC_IP = aws_eip.docker_eip.public_ip
+  })
+
   tags = {
     Name = "DockerInstance"
   }
-}
 
+  depends_on = [aws_eip.docker_eip]
+}
 # Allocate a new Elastic IP without direct instance association
 resource "aws_eip" "docker_eip" {
   domain      = "vpc"
+  network_interface = aws_network_interface.docker_eni.id
 
   tags = {
     Name = "IB-Gateway-EIP"
