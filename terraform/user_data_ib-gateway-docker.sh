@@ -138,6 +138,8 @@ fetch_and_write_param "/IB_Gateway/TWS_PASSWORD" "TWS_PASSWORD"
 fetch_and_write_param "/IB_Gateway/TRADING_MODE" "TRADING_MODE"
 fetch_and_write_param "/IB_Gateway/VNC_SERVER_PASSWORD" "VNC_SERVER_PASSWORD"
 fetch_and_write_param "/IB_Gateway/JUPYTER_TOKEN" "JUPYTER_TOKEN"
+fetch_and_write_param "/IB_Gateway/TWS_USERID" "TWS_USERID_PAPER"
+fetch_and_write_param "/IB_Gateway/TWS_PASSWORD" "TWS_PASSWORD_PAPER"
 
 # Advanced parameters
 fetch_and_write_param "/IB_Gateway/TWS_SETTINGS_PATH" "TWS_SETTINGS_PATH"
@@ -269,20 +271,20 @@ sudo chmod 700 /home/ubuntu/.docker
 # Set the public IP address provided by Terraform (placeholder to be replaced)
 PUBLIC_IP="${PUBLIC_IP}"
 
-# Create SSL directory and generate self-signed certificate using the EIP
-echo "Creating SSL directory and generating self-signed certificate for IP: ${PUBLIC_IP}"
-sudo mkdir -p /etc/ssl/certs
+# # Create SSL directory and generate self-signed certificate using the EIP
+# echo "Creating SSL directory and generating self-signed certificate for IP: ${PUBLIC_IP}"
+# sudo mkdir -p /etc/ssl/certs
 
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/ssl/certs/self-signed.key \
-    -out /etc/ssl/certs/self-signed.pem \
-    -subj "/C=US/ST=NewYork/L=NewYork/O=ExampleOrg/OU=IT/CN=${PUBLIC_IP}"
+# sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+#     -keyout /etc/ssl/certs/self-signed.key \
+#     -out /etc/ssl/certs/self-signed.pem \
+#     -subj "/C=US/ST=NewYork/L=NewYork/O=ExampleOrg/OU=IT/CN=${PUBLIC_IP}"
 
-# Set permissions to ensure that the ubuntu user can access the certificates
-sudo chmod 644 /etc/ssl/certs/self-signed.*
-sudo chown -R ubuntu:ubuntu /etc/ssl/certs
+# # Set permissions to ensure that the ubuntu user can access the certificates
+# sudo chmod 644 /etc/ssl/certs/self-signed.*
+# sudo chown -R ubuntu:ubuntu /etc/ssl/certs
 
-echo "Self-signed certificate created for IP: ${PUBLIC_IP}"
+# echo "Self-signed certificate created for IP: ${PUBLIC_IP}"
 
 # Navigate to the directory containing the docker-compose.yml file
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution

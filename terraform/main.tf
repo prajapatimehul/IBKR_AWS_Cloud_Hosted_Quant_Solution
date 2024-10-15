@@ -81,7 +81,13 @@ resource "aws_security_group" "docker_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.my_ip]
   }
-
+# Allow forwarding port 8888
+  ingress {
+    from_port   = 8888
+    to_port     = 8888
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
   # Allow HTTP (port 80)
   ingress {
     from_port   = 80

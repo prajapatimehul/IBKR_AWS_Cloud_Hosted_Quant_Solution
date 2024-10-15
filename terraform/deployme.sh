@@ -90,9 +90,9 @@ case $choice in
     ;;
 esac
 
-# Step 3: Run Terraform plan with the chosen IP address or range
-echo "Running Terraform plan with IP/CIDR: $IP_CIDR"
-terraform plan -var="my_ip=${IP_CIDR}"
+# # Step 3: Run Terraform plan with the chosen IP address or range
+# echo "Running Terraform plan with IP/CIDR: $IP_CIDR"
+# terraform plan -var="my_ip=${IP_CIDR}"
 
 # Step 4: Apply the configuration to update the security group
 echo "Applying Terraform configuration to update the security group..."

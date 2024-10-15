@@ -1,14 +1,28 @@
 import boto3
 import os
 import re
+import logging
+from datetime import datetime
+from pathlib import Path
+
 
 # Initialize boto3 client
 ssm = boto3.client('ssm', region_name='us-east-1')
+
+# Set up logging
+home_dir = str(Path.home())
+log_dir = os.path.join(home_dir, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, f"ib_gateway_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+logging.basicConfig(filename=log_file, level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define main and advanced parameters with their descriptions
 PARAMETERS_INFO = {
     '/IB_Gateway/TWS_USERID': {'category': 'Main', 'description': 'The TWS username.'},
     '/IB_Gateway/TWS_PASSWORD': {'category': 'Main', 'description': 'The TWS password.'},
+    '/IB_Gateway/TWS_USERID_PAPER': {'category': 'Main', 'description': 'The TWS username for papertrading.'},
+    '/IB_Gateway/TWS_PASSWORD_PAPER': {'category': 'Main', 'description': 'The TWS password for papertrading.'},
     '/IB_Gateway/TRADING_MODE': {'category': 'Main', 'description': 'Options: live, paper, or both. Default: paper', 'default': 'paper'},
     '/IB_Gateway/VNC_SERVER_PASSWORD': {'category': 'Main', 'description': 'VNC server password. If not defined, VNC server will NOT start.'},
     '/IB_Gateway/JUPYTER_TOKEN': {'category': 'Main', 'description': 'Token for Jupyter notebook access.'},
@@ -54,12 +68,23 @@ def put_parameter(name, value):
         Type='SecureString',
         Overwrite=True
     )
+    logging.info(f"Parameter {name} has been updated/created.")
 
 def is_sensitive(param_name):
     return bool(re.search(r'password|token', param_name, re.IGNORECASE))
 
 def mask_sensitive_value(value):
     return '*' * len(value) if value else ''
+
+def ensure_parameters_exist():
+    for param, info in PARAMETERS_INFO.items():
+        if get_parameter(param) is None:
+            default_value = info.get('default', '')
+            if default_value:
+                put_parameter(param, default_value)
+                logging.info(f"Parameter {param} added with default value.")
+            else:
+                logging.info(f"Parameter {param} does not exist and has no default value.")
 
 def manage_parameters(parameters, category):
     changes_made = False
@@ -81,46 +106,84 @@ def manage_parameters(parameters, category):
                 if new_value:
                     put_parameter(param, new_value)
                     changes_made = True
-                    print(f"Parameter {param} updated.")
         else:
             new_value = input(prompt + "Enter value: ")
             if new_value:
                 put_parameter(param, new_value)
                 changes_made = True
-                print(f"Parameter {param} created.")
     
     return changes_made
 
+def add_custom_env_variables():
+    changes_made = False
+    while True:
+        new_var = input("Enter a new environment variable name (or press Enter to finish): ")
+        if not new_var:
+            break
+        
+        new_param = f"/IB_Gateway/{new_var}"
+        if new_param in PARAMETERS_INFO:
+            logging.info(f"Parameter {new_param} already exists in the predefined list.")
+            continue
+        
+        description = input("Enter a description for this variable: ")
+        default = input("Enter a default value (optional): ")
+        category = input("Enter category (Main/Advanced): ")
+        
+        PARAMETERS_INFO[new_param] = {
+            'category': category,
+            'description': description,
+            'default': default
+        }
+        
+        value = input(f"Enter value for {new_param}: ")
+        put_parameter(new_param, value)
+        changes_made = True
+        logging.info(f"New parameter {new_param} added to the parameter store.")
+    
+    return changes_made
 
 def main():
+    logging.info("Starting IB Gateway configuration update process.")
+    
+    # Ensure all parameters exist in the store
+    ensure_parameters_exist()
+
     changes_made = False
 
     # Check if main config exists
     main_parameters = [param for param, info in PARAMETERS_INFO.items() if info['category'] == 'Main']
     advanced_parameters = [param for param, info in PARAMETERS_INFO.items() if info['category'] == 'Advanced']
 
-    main_config_exists = any(get_parameter(param) for param in main_parameters)
-
-    if main_config_exists:
-        change_main = input("Main config exists. Would you like to change any main settings (username, password, etc.)? (yes/no): ").lower()
-        if change_main == 'yes':
-            changes_made = manage_parameters(main_parameters, "Main") or changes_made
+    change_main = input("Would you like to change any main settings (username, password, etc.)? (yes/no): ").lower()
+    if change_main == 'yes':
+        changes_made = manage_parameters(main_parameters, "Main") or changes_made
 
     change_advanced = input("Would you like to add or change advanced settings? (yes/no): ").lower()
     if change_advanced == 'yes':
         changes_made = manage_parameters(advanced_parameters, "Advanced") or changes_made
 
+    # Add custom environment variables
+    add_custom = input("Would you like to add new custom environment variables? (yes/no): ").lower()
+    if add_custom == 'yes':
+        changes_made = add_custom_env_variables() or changes_made
+
     if changes_made:
         update_choice = input("Changes were made. Do you want to update 1) straight away or 2) next build? (1/2): ")
         if update_choice == '1':
             print("Updating straight away...")
-            
+            logging.info("User chose to update straight away.")
             # Placeholder for rebuilding docker container
-            print("# TODO: Rebuild docker container via HTTP or SSH command")
+            logging.info("TODO: Rebuild docker container via HTTP or SSH command")
         else:
             print("Changes will be applied on next build.")
+            logging.info("Changes will be applied on next build.")
     else:
         print("No changes were made.")
+        logging.info("No changes were made.")
 
-if __name__ == "__main__"
+    logging.info("IB Gateway configuration update process completed.")
+    print(f"Log file has been created at: {log_file}")
+
+if __name__ == "__main__":
     main()
