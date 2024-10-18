@@ -3,6 +3,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "availability_zone" {
+  description = "The AWS Availability Zone where the resources should be created"
+  type        = string
+  default     = "us-east-1a" 
+}
+
 variable "my_ip" {
   description = "The IP address or range to allow SSH and HTTPS access from"
   type        = string
@@ -29,7 +35,3 @@ variable "ami_id" {
   default     = "ami-0e1fd4ed3e0403447"  # ubuntu image
 }
 
-variable "your_home_ip" {
-  description = "IP address for security"
-  default     = "0.0.0.0"  # ubuntu image
-}

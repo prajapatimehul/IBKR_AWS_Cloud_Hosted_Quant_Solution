@@ -3,6 +3,18 @@ provider "aws" {
   profile = "terraform"
 }
 
+
+# Configure backend to use the dynamically fetched bucket and DynamoDB table
+terraform {
+  backend "s3" {
+    bucket         = data.aws_s3_bucket.terraform_state.id
+    key            = "infrastructure/terraform.tfstate"  # Path in the bucket for the infrastructure state file
+    region         = var.aws_region
+    dynamodb_table = data.aws_dynamodb_table.terraform_locks.name
+    encrypt        = true
+  }
+}
+
 # Create a new VPC
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -185,7 +197,25 @@ resource "aws_network_interface" "docker_eni" {
     Name = "Docker-ENI"
   }
 }
+# Fetch the existing EBS volume
+data "aws_ebs_volume" "docker_data" {
+  most_recent = true
 
+  filter {
+    name   = "volume-type"
+    values = ["gp3"]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["DockerDataVolume"]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [var.availability_zone]
+  }
+}
 
 resource "aws_instance" "docker" {
   ami                  = var.ami_id
@@ -197,17 +227,26 @@ resource "aws_instance" "docker" {
     network_interface_id = aws_network_interface.docker_eni.id
     device_index         = 0
   }
+  tags = {
+    Name = "QuantInstance"
+  }
+  
 
   user_data = templatefile("${path.module}/user_data_ib-gateway-docker.sh", {
     PUBLIC_IP = aws_eip.docker_eip.public_ip
   })
 
-  tags = {
-    Name = "DockerInstance"
-  }
+
 
   depends_on = [aws_eip.docker_eip]
 }
+# Attach the EBS volume to the EC2 instance
+resource "aws_volume_attachment" "docker_data_att" {
+  device_name = "/dev/xvdf"
+  volume_id   = data.aws_ebs_volume.docker_data.id
+  instance_id = aws_instance.docker.id
+}
+  
 # Allocate a new Elastic IP without direct instance association
 resource "aws_eip" "docker_eip" {
   domain      = "vpc"
@@ -217,21 +256,7 @@ resource "aws_eip" "docker_eip" {
     Name = "IB-Gateway-EIP"
   }
 }
-# resource "aws_volume_attachment" "docker_data_att" {
-#   device_name = "/dev/xvdf"
-#   volume_id   = aws_ebs_volume.docker_data.id
-#   instance_id = aws_instance.docker.id
-# }
 
-# OLd Allocate a new Elastic IP
-# resource "aws_eip" "docker_eip" {
-#   domain      = "vpc"
-#   instance = aws_instance.docker.id
-
-#   tags = {
-#     Name = "IB-Gateway-EIP"
-#   }
-# }
 
 output "eip_public_ip" {
   value = aws_eip.docker_eip.public_ip
