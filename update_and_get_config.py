@@ -186,8 +186,7 @@ def main():
         if update_choice == '1':
             print("Updating straight away...")
             logging.info("User chose to update straight away.")
-            # Placeholder for rebuilding docker container
-            logging.info("TODO: Rebuild docker container via HTTP or SSH command")
+            execute_update_script()
         else:
             print("Changes will be applied on next build.")
             logging.info("Changes will be applied on next build.")
