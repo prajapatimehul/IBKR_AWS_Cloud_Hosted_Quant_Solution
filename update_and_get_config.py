@@ -2,6 +2,7 @@ import boto3
 import os
 import re
 import logging
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -142,6 +143,18 @@ def add_custom_env_variables():
         logging.info(f"New parameter {new_param} added to the parameter store.")
     
     return changes_made
+
+def execute_update_script():
+    script_path = os.path.join(os.path.dirname(__file__), 'ssm-dynamic-trigger-script-updated.sh')
+    try:
+        result = subprocess.run(['bash', script_path], capture_output=True, text=True, check=True)
+        logging.info(f"Update script executed successfully. Output: {result.stdout}")
+        print("Update script executed successfully. Check the log file for details.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error executing update script: {e}")
+        logging.error(f"Script output: {e.output}")
+        print(f"Error executing update script. Check the log file for details.")
+
 
 def main():
     logging.info("Starting IB Gateway configuration update process.")
