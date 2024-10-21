@@ -5,7 +5,7 @@ AWS_REGION="us-east-1"
 
 # Set the tag key and value to identify your instance
 TAG_KEY="Name"
-TAG_VALUE="IB-Gateway-Instance"
+TAG_VALUE="QuantInstance"
 
 # Find the instance ID based on the tag
 INSTANCE_ID=$(aws ec2 describe-instances \
@@ -21,7 +21,7 @@ fi
 
 echo "Found instance: $INSTANCE_ID"
 
-# Send the command to the instance, including chmod
+# Send the command to the instance
 COMMAND_ID=$(aws ssm send-command \
     --region $AWS_REGION \
     --instance-ids "$INSTANCE_ID" \
@@ -48,13 +48,26 @@ STATUS=$(aws ssm list-command-invocations \
 
 echo "Command execution completed with status: $STATUS"
 
-# Optionally, get command output
+# Get command output, including error output
 OUTPUT=$(aws ssm get-command-invocation \
     --region $AWS_REGION \
     --command-id "$COMMAND_ID" \
     --instance-id "$INSTANCE_ID" \
-    --query "StandardOutputContent" \
+    --query "[StandardOutputContent, StandardErrorContent]" \
     --output text)
 
 echo "Command output:"
 echo "$OUTPUT"
+
+# If the command failed, get more details
+if [ "$STATUS" == "Failed" ]; then
+    ERROR_DETAILS=$(aws ssm get-command-invocation \
+        --region $AWS_REGION \
+        --command-id "$COMMAND_ID" \
+        --instance-id "$INSTANCE_ID" \
+        --query "StandardErrorContent" \
+        --output text)
+    
+    echo "Error details:"
+    echo "$ERROR_DETAILS"
+fi
