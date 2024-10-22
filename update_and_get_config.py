@@ -145,7 +145,7 @@ def add_custom_env_variables():
     return changes_made
 
 def execute_update_script():
-    script_path = os.path.join(os.path.dirname(__file__), 'ssm-dynamic-trigger-script-updated.sh')
+    script_path = os.path.join(os.path.dirname(__file__), 'trigger_docker_rebuild.sh')
     try:
         result = subprocess.run(['bash', script_path], capture_output=True, text=True, check=True)
         logging.info(f"Update script executed successfully. Output: {result.stdout}")
