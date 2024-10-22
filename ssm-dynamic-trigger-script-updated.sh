@@ -26,7 +26,7 @@ COMMAND_ID=$(aws ssm send-command \
     --region $AWS_REGION \
     --instance-ids "$INSTANCE_ID" \
     --document-name "AWS-RunShellScript" \
-    --parameters 'commands=["chmod +x /home/ubuntu/update_and_restart.sh", "/home/ubuntu/update_and_restart.sh"]' \
+    --parameters 'commands=["chmod +x /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution/update_and_restart.sh", "/home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution/update_and_restart.sh"]' \
     --output text \
     --query "Command.CommandId")
 
