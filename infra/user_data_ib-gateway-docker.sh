@@ -97,6 +97,7 @@ cd /home/ubuntu
 
 # Clone the repository (you'll need access to the repository, if it's private)
 git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
+git checkout v1.1
 
 # Move to the desired folder and copy it to the desired location
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
