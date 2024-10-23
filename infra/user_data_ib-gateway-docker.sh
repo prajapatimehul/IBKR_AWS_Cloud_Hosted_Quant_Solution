@@ -17,19 +17,13 @@ trap 'log "Error on line $LINENO"' ERR
 log "Starting script execution"
 
 # Update the system
-set -x
-set +e
+set -euxo pipefail
 
 # Create error handling function
 handle_error() {
-    local exit_code=$?
-    local line_number=$1
-    log "Error on line ${line_number}: Exit code ${exit_code}"
-    return $exit_code
+    log "Error on line $LINENO: Exit code $?"
 }
-trap 'handle_error ${LINENO}' ERR
-
-
+trap 'handle_error' ERR
 
 export HOME=/home/ubuntu
 
@@ -145,7 +139,7 @@ if ! git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution
 fi
 
 # Clone the repository (you'll need access to the repository, if it's private)
-git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
+#git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
 
 
 # Move to the desired folder and copy it to the desired location
