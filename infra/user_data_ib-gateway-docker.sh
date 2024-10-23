@@ -1,7 +1,35 @@
 #!/bin/bash
 
+
+# Enable error logging
+exec 1> >(tee -a "/var/log/cloud-init-script.log")
+exec 2> >(tee -a "/var/log/cloud-init-script.log" >&2)
+
+# Function for logging
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Trap errors
+trap 'log "Error on line $LINENO"' ERR
+
+# Start script
+log "Starting script execution"
+
 # Update the system
-set -euxo pipefail
+set -x
+set +e
+
+# Create error handling function
+handle_error() {
+    local exit_code=$?
+    local line_number=$1
+    log "Error on line ${line_number}: Exit code ${exit_code}"
+    return $exit_code
+}
+trap 'handle_error ${LINENO}' ERR
+
+
 
 export HOME=/home/ubuntu
 
@@ -10,6 +38,12 @@ sudo sed -i 's/us-east-1.ec2.archive.ubuntu.com/archive.ubuntu.com/g' /etc/apt/s
 
 # Increase retry attempts
 echo 'Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/80-retries
+
+if ! sudo apt-get update -y; then
+    log "ERROR: apt-get update failed"
+    exit 1
+fi
+
 
 # Update and clean package lists
 sudo apt-get clean
@@ -26,6 +60,13 @@ sudo chmod +x /usr/local/bin/docker-compose
 #sudo apt-get install -y --fix-missing docker-compose
 
 # ... rest of your script ...
+
+if ! sudo systemctl start docker; then
+    log "ERROR: Failed to start Docker"
+    # Try to get Docker status
+    sudo systemctl status docker
+    exit 1
+fi
 
 sudo systemctl start docker
 sudo usermod -aG docker ubuntu
@@ -94,6 +135,14 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 
 # Change to the directory where you want to store your project
 cd /home/ubuntu
+
+if ! git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git; then
+    log "ERROR: Git clone failed"
+    # Check git version and connectivity
+    git --version
+    ping -c 1 github.com
+    exit 1
+fi
 
 # Clone the repository (you'll need access to the repository, if it's private)
 git clone https://github.com/Jamesd000/IBKR_AWS_Cloud_Hosted_Quant_Solution.git
@@ -202,7 +251,16 @@ while [ ! -e $EBS_DEVICE ]; do
     sleep 5
 done
 
-log "EBS device detected: $EBS_DEVICE"
+
+log "Checking EBS device: $EBS_DEVICE"
+if [ -e "$EBS_DEVICE" ]; then
+    log "EBS device exists"
+else
+    log "ERROR: EBS device $EBS_DEVICE not found"
+    # List available devices
+    lsblk
+    exit 1
+fi
 
 # Check if the volume is already formatted
 if ! blkid $EBS_DEVICE; then
