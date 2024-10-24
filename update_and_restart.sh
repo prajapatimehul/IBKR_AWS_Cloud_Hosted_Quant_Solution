@@ -18,7 +18,9 @@ fetch_and_write_param() {
     local env_var_name=$2
     value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region $AWS_REGION 2>/dev/null)
     if [ $? -eq 0 ] && [ ! -z "$value" ]; then
-        echo "$env_var_name=$value" >> $ENV_FILE
+        # Handle values containing single quotes by escaping them
+        escaped_value=$(printf '%s' "$value" | sed "s/'/'\\\\''/g")
+        echo "$env_var_name='$escaped_value'" >> $ENV_FILE
     fi
 }
 
