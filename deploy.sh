@@ -120,54 +120,71 @@ check_and_create_jupyter_token() {
 
 # Function to check and create required parameters
 check_and_create_parameters() {
-    # Define parameters
-    local required_params=(
-        "/IB_Gateway/TWS_USERID"
-        "/IB_Gateway/TWS_PASSWORD"
-        "/IB_Gateway/TRADING_MODE"
-        "/IB_Gateway/VNC_SERVER_PASSWORD"
-        "/IB_Gateway/TWS_USERID_PAPER"
-        "/IB_Gateway/TWS_PASSWORD_PAPER"
-    )
-
-    echo -e "${YELLOW}Checking for required parameters in AWS Systems Manager Parameter Store...${NC}"
-
-    for param in "${required_params[@]}"; do
-        if ! aws ssm get-parameter --name "$param" --with-decryption > /dev/null 2>&1; then
-            echo -e "${YELLOW}Parameter $param not found!${NC}"
-            local param_name=$(basename "$param")
-            local value=""
-            
-            # Check if this is a secure parameter (contains PASSWORD in the name)
-            if [[ "$param" == *"PASSWORD"* || "$param" == *"password"* ]]; then
-                value=$(read_secure_input "Enter value for $param_name: ")
-                is_secure=true
-            elif [ "$param" == "/IB_Gateway/TRADING_MODE" ]; then
-                while true; do
-                    read -p "Enter trading mode (paper/live): " value
-                    if [[ "$value" == "paper" || "$value" == "live" ]]; then
-                        break
-                    fi
-                    echo -e "${YELLOW}Invalid input. Trading mode must be either 'paper' or 'live'.${NC}"
-                done
-                is_secure=false
-            else
-                read -p "Enter value for $param_name: " value
-                is_secure=false
-            fi
-            
-            if ! create_ssm_parameter "$param" "$value" "$is_secure"; then
-                return 1
-            fi
-        else
-            echo -e "${GREEN}Parameter $param exists${NC}"
-        fi
-    done
-
-    echo -e "${GREEN}All required parameters are now set in AWS SSM Parameter Store${NC}"
-    return 0
+   # Define parameters
+   local required_params=(
+       "/IB_Gateway/TWS_USERID"
+       "/IB_Gateway/TWS_PASSWORD"
+       "/IB_Gateway/TRADING_MODE" 
+       "/IB_Gateway/VNC_SERVER_PASSWORD"
+       "/IB_Gateway/TWS_USERID_PAPER"
+       "/IB_Gateway/TWS_PASSWORD_PAPER"
+   )
+   
+   echo -e "${YELLOW}Checking for required parameters in AWS Systems Manager Parameter Store...${NC}"
+   
+   for param in "${required_params[@]}"; do
+       # Check if parameter exists and get its type
+       param_type=$(aws ssm get-parameter --name "$param" --query 'Parameter.Type' --output text 2>/dev/null)
+       param_exists=$?
+       
+       if [ $param_exists -eq 0 ]; then
+           # Parameter exists, check if it's SecureString
+           if [ "$param_type" != "SecureString" ]; then
+               echo -e "${YELLOW}Parameter $param exists but is not secure (Type: $param_type)${NC}"
+               # Get current value
+               current_value=$(aws ssm get-parameter --name "$param" --with-decryption --query 'Parameter.Value' --output text)
+               
+               # Delete the existing parameter
+               aws ssm delete-parameter --name "$param"
+               
+               # Recreate as SecureString
+               if create_ssm_parameter "$param" "$current_value" true; then
+                   echo -e "${GREEN}Parameter $param converted to SecureString${NC}"
+               else
+                   echo -e "${RED}Failed to convert $param to SecureString${NC}"
+                   return 1
+               fi
+           else
+               echo -e "${GREEN}Parameter $param exists and is secure${NC}"
+           fi
+       else
+           echo -e "${YELLOW}Parameter $param not found!${NC}"
+           local param_name=$(basename "$param")
+           local value=""
+           
+           # Handle parameter input
+           if [ "$param" == "/IB_Gateway/TRADING_MODE" ]; then
+               while true; do
+                   value=$(read_secure_input "Enter trading mode (paper/live/both): ")
+                   if [[ "$value" == "paper" || "$value" == "live" || "$value" == "both" ]]; then
+                       break
+                   fi
+                   echo -e "${YELLOW}Invalid input. Trading mode must be 'paper', 'live', or 'both'.${NC}"
+               done
+           else
+               value=$(read_secure_input "Enter value for $param_name: ")
+           fi
+           
+           # Create as SecureString
+           if ! create_ssm_parameter "$param" "$value" true; then
+               return 1
+           fi
+       fi
+   done
+   
+   echo -e "${GREEN}All required parameters are now set as SecureString in AWS SSM Parameter Store${NC}"
+   return 0
 }
-
 # Main script execution starts here
 # Step 1: Check if Terraform is installed
 if ! command_exists terraform; then
