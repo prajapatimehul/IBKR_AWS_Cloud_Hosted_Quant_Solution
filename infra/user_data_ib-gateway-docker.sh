@@ -173,9 +173,7 @@ fetch_and_write_param() {
     local env_var_name=$2
     value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region $AWS_REGION 2>/dev/null)
     if [ $? -eq 0 ] && [ ! -z "$value" ]; then
-        # Ensure value is properly sanitized and there's no extra newline
-        value=$(echo "$value" | tr -d '\n' | tr -d '\r')
-        echo "${env_var_name}=${value}" >> $ENV_FILE
+        echo "$env_var_name=$value" >> $ENV_FILE
     fi
 }
 
