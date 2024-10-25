@@ -171,9 +171,11 @@ ENV_FILE="/home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution/.env"
 fetch_and_write_param() {
     local param_name=$1
     local env_var_name=$2
+    # Use single quotes around the aws command to prevent $ interpretation
     value=$(aws ssm get-parameter --name "$param_name" --with-decryption --query Parameter.Value --output text --region $AWS_REGION 2>/dev/null)
     if [ $? -eq 0 ] && [ ! -z "$value" ]; then
-        echo "$env_var_name=$value" >> $ENV_FILE
+        # Use printf to preserve special characters including $
+        printf "%s=%s\n" "$env_var_name" "'$value'" >> $ENV_FILE
     fi
 }
 
