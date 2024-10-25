@@ -36,13 +36,15 @@ generate_jupyter_token() {
     fi
 }
 
-# Function to read password securely (with masking)
+
 read_secure_input() {
     local prompt="$1"
-    local password=""
-    read -s -p "$prompt" password
-    echo ""
-    echo "$password"
+    local value
+    read -s -p "$prompt" value
+    echo  # New line after secure input
+    # Trim whitespace and newlines
+    value=$(echo "$value" | tr -d '\n' | tr -d '\r')
+    echo "$value"
 }
 
 # Function to validate trading mode
@@ -59,6 +61,9 @@ create_ssm_parameter() {
     local param_name="$1"
     local param_value="$2"
     local is_secure="$3"
+    
+    # Sanitize the parameter value (remove newlines and carriage returns)
+    param_value=$(echo "$param_value" | tr -d '\n' | tr -d '\r')
     
     local param_type="String"
     if [ "$is_secure" = true ]; then
