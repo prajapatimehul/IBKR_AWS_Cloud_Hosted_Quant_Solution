@@ -285,12 +285,35 @@ else
     log "Volume already mounted"
 fi
 
-# Create directories for Docker and Jupyter
-mkdir -p $MOUNT_POINT/docker $MOUNT_POINT/jupyter/work $MOUNT_POINT/jupyter/config
+# Create all necessary Jupyter directories on EBS volume
+sudo mkdir -p $MOUNT_POINT/jupyter/{.jupyter,.local,.config,notebooks,work}
+sudo chown -R 1000:1000 $MOUNT_POINT/jupyter
+sudo chmod 755 $MOUNT_POINT/jupyter/{.jupyter,.local,.config,notebooks,work}
 
-# Set permissions (adjust as needed for security)
-chown -R 1000:1000 $MOUNT_POINT/jupyter
-chmod 755 $MOUNT_POINT/jupyter $MOUNT_POINT/jupyter/work $MOUNT_POINT/jupyter/config
+# Create a test notebook to verify persistence
+cat << EOF | sudo tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Persistence Test Notebook\n",
+    "If you can see this after a rebuild, persistence is working correctly."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
+EOF
 
 # Configure Docker to use the EBS volume for its data
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
