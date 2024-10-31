@@ -59,12 +59,17 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - /docker_data/jupyter/notebooks:/home/quant/notebooks
-      - /docker_data/jupyter/.jupyter:/home/quant/.jupyter
-      - /docker_data/jupyter/.local:/home/quant/.local
-      - /docker_data/jupyter/.config:/home/quant/.config
-    working_dir: /home/quant/notebooks
+      - type: bind
+        source: /docker_data/jupyter/.config
+        target: /home/quant/.config
+      - type: bind
+        source: /docker_data/jupyter/.local
+        target: /home/quant/.local
+      - type: bind
+        source: /docker_data/jupyter/notebooks
+        target: /home/quant/Notebooks
     user: "1000:1000"
+    working_dir: /home/quant/Notebooks
     command: >
       /bin/bash -c "
       mkdir -p /home/quant/notebooks &&
