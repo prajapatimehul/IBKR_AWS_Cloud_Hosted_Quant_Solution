@@ -10,7 +10,6 @@ terraform {
     bucket         = data.aws_s3_bucket.terraform_state.id
     key            = "infrastructure/terraform.tfstate"  # Path in the bucket for the infrastructure state file
     region         = var.aws_region
-    dynamodb_table = data.aws_dynamodb_table.terraform_locks.name
     encrypt        = true
   }
 }

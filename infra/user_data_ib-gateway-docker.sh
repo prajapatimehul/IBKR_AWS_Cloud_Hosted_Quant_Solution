@@ -285,13 +285,33 @@ else
     log "Volume already mounted"
 fi
 
-# Create all necessary Jupyter directories on EBS volume
-sudo mkdir -p $MOUNT_POINT/jupyter/{.jupyter,.local,.config,notebooks,work}
-sudo chown -R 1000:1000 $MOUNT_POINT/jupyter
-sudo chmod 755 $MOUNT_POINT/jupyter/{.jupyter,.local,.config,notebooks,work}
+
+
+# Create directories for Docker and Jupyter with proper structure
+mkdir -p $MOUNT_POINT/docker
+mkdir -p $MOUNT_POINT/jupyter/{notebooks,.jupyter,.local,.config}
+
+# Set permissions for Jupyter directories (user 1000 is the 'quant' user in the container)
+chown -R 1000:1000 $MOUNT_POINT/jupyter
+chmod 755 $MOUNT_POINT/jupyter
+chmod 755 $MOUNT_POINT/jupyter/{notebooks,.jupyter,.local,.config}
+
+# Configure Docker to use the EBS volume for its data
+if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
+    log "Configuring Docker to use EBS volume"
+    cat << EOF > /etc/docker/daemon.json
+{
+    "data-root": "$MOUNT_POINT/docker"
+}
+EOF
+    log "Restarting Docker"
+    systemctl restart docker
+else
+    log "Docker already configured to use EBS volume"
+fi
 
 # Create a test notebook to verify persistence
-cat << EOF | sudo tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
+cat << EOF | tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
 {
  "cells": [
   {
@@ -315,27 +335,8 @@ cat << EOF | sudo tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
 }
 EOF
 
-# Configure Docker to use the EBS volume for its data
-if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
-    log "Configuring Docker to use EBS volume"
-    cat << EOF > /etc/docker/daemon.json
-{
-    "data-root": "$MOUNT_POINT/docker"
-}
-EOF
-    log "Restarting Docker"
-    systemctl restart docker
-else
-    log "Docker already configured to use EBS volume"
-fi
-
-log "EBS volume setup complete"
-
-log "Setting up Docker and Jupyter permissions"
-sudo usermod -aG docker ubuntu
-sudo mkdir -p /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
-sudo chown -R 1000:1000 /docker_data/jupyter
-sudo chmod 775 /docker_data/jupyter /docker_data/jupyter/config /docker_data/jupyter/work /docker_data/jupyter/local
+# Set correct ownership for the test notebook
+chown 1000:1000 $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
 
 # Ensure Docker daemon socket has correct permissions
 log "Setting Docker socket permissions"

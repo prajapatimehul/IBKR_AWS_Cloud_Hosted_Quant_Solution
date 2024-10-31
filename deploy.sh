@@ -239,7 +239,7 @@ if [ -z "$existing_bucket" ]; then
     echo -e "${YELLOW}No existing S3 bucket found for state management, applying Terraform for S3 and DynamoDB setup...${NC}"
     cd ./s3_dynamo_for_statemanagement || exit 1
     terraform init
-    terraform apply -auto-approve
+    terraform apply -auto-approve 
     check_status "Failed to create S3 bucket and DynamoDB for state management"
     existing_bucket=$(terraform output -raw bucket_name)
 else
@@ -271,7 +271,7 @@ terraform init \
 check_status "Failed to initialize EBS module"
 
 echo -e "${YELLOW}Applying EBS module...${NC}"
-terraform apply -auto-approve
+terraform apply -auto-approve -lock=false
 check_status "Failed to apply EBS module"
 
 # Step 7: Initialize and apply the Infrastructure module
@@ -322,7 +322,7 @@ case $choice in
 esac
 
 echo "Applying Terraform configuration to update the security group..."
-terraform apply -var "my_ip=${IP_CIDR}" -auto-approve
+terraform apply -var "my_ip=${IP_CIDR}" -auto-approve -lock=false
 check_status "Failed to apply infrastructure module"
 
 # Completion message

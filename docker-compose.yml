@@ -57,15 +57,19 @@ services:
       - TZ=${QUANT_TZ:-America/New_York}
     restart: always
     ports:
-      - "8888:8888"            # Map host port 8888 to container port 8888 for HTTP access
+      - "8888:8888"
     volumes:
-      - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-quant}/.config
-      - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-quant}/.local
-      - /home/ec2-user/Notebooks:/home/${JUPYTER_USER:-quant}/Notebooks
+      - /docker_data/jupyter/notebooks:/home/quant/notebooks
+      - /docker_data/jupyter/.jupyter:/home/quant/.jupyter
+      - /docker_data/jupyter/.local:/home/quant/.local
+      - /docker_data/jupyter/.config:/home/quant/.config
+    working_dir: /home/quant/notebooks
+    user: "1000:1000"
     command: >
       /bin/bash -c "
+      mkdir -p /home/quant/notebooks &&
       pip install --user --no-cache-dir ibapi apscheduler &&
-      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' 
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/quant/notebooks
       "
 
 networks:

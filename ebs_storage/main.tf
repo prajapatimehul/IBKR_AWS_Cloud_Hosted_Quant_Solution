@@ -11,7 +11,7 @@ terraform {
     bucket         = data.aws_s3_bucket.terraform_state.id  # Dynamically get the bucket name
     key            = "ebs/terraform.tfstate"  # Path in the bucket for the EBS state file
     region         = var.aws_region
-    dynamodb_table = data.aws_dynamodb_table.terraform_locks.name  # Dynamically get the DynamoDB table name
+    #dynamodb_table = data.aws_dynamodb_table.terraform_locks.name  # Dynamically get the DynamoDB table name
     encrypt        = true
   }
 }
