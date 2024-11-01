@@ -48,10 +48,10 @@ services:
       - "4001"                 # Internal API port for live accounts
       - "4002"                 # Internal API port for paper accounts
 
-  jupyter-quant:
+ jupyter-quant:
     image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
     environment:
-      - USER_NAME=${JUPYTER_USER:-quant}
+      - USER_NAME=${JUPYTER_USER:-gordon}  
       - JUPYTER_ENABLE_LAB=yes
       - JUPYTER_TOKEN=${JUPYTER_TOKEN}
       - TZ=${QUANT_TZ:-America/New_York}
@@ -61,20 +61,20 @@ services:
     volumes:
       - type: bind
         source: /docker_data/jupyter/.config
-        target: /home/quant/.config
+        target: /home/gordon/.config        
       - type: bind
         source: /docker_data/jupyter/.local
-        target: /home/quant/.local
+        target: /home/gordon/.local         
       - type: bind
         source: /docker_data/jupyter/notebooks
-        target: /home/quant/Notebooks
-    user: "1000:1000"
-    working_dir: /home/quant/Notebooks
+        target: /home/gordon/Notebooks      
+    user: "1000:1000"                     
+    working_dir: /home/gordon/Notebooks    
     command: >
       /bin/bash -c "
-      mkdir -p /home/quant/notebooks &&
+      mkdir -p /home/gordon/Notebooks &&    
       pip install --user --no-cache-dir ibapi apscheduler &&
-      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/quant/notebooks
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
       "
 
 networks:

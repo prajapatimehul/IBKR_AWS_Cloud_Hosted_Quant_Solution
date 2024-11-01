@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 cd infra
 echo -e "${GREEN}Destroying the EC2 instance...${NC}"
 
-terraform destroy -target=aws_instance.docker -target=aws_eip.docker_eip -auto-approve
+terraform destroy -target=aws_instance.docker -target=aws_eip.docker_eip -auto-approve -lock=false
 
 
 if [ $? -eq 0 ]; then
