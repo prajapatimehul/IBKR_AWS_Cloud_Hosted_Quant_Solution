@@ -287,38 +287,43 @@ fi
 
 
 
-# Create directories for Docker and Jupyter with proper structure
-mkdir -p $MOUNT_POINT/docker
-mkdir -p $MOUNT_POINT/jupyter/{notebooks,.jupyter,.local,.config}
+# Define mount point and directories
+MOUNT_POINT="/docker_data"
+JUPYTER_DIR="$MOUNT_POINT/jupyter"
+DOCKER_DIR="$MOUNT_POINT/docker"
+NOTEBOOK_DIR="$JUPYTER_DIR/notebooks"
+USER_ID=1000  # Jupyter container user ID
 
-# Set permissions for Jupyter directories (user 1000 is the 'quant' user in the container)
-chown -R 1000:1000 $MOUNT_POINT/jupyter
-chmod 755 $MOUNT_POINT/jupyter
-chmod 755 $MOUNT_POINT/jupyter/{notebooks,.jupyter,.local,.config}
+# Create directories for Docker and Jupyter with the necessary structure
+mkdir -p "$DOCKER_DIR"
+mkdir -p "$JUPYTER_DIR"/{notebooks,.jupyter,.local,.config}
 
-# Configure Docker to use the EBS volume for its data
+# Set permissions for Jupyter directories to match container user (user 1000)
+chown -R $USER_ID:$USER_ID "$JUPYTER_DIR"
+chmod -R 755 "$JUPYTER_DIR"
+
+# Configure Docker to use EBS volume for data if not already configured
 if [ ! -f /etc/docker/daemon.json ] || ! grep -q "data-root" /etc/docker/daemon.json; then
-    log "Configuring Docker to use EBS volume"
+    echo "Configuring Docker to use EBS volume for data-root"
     cat << EOF > /etc/docker/daemon.json
 {
-    "data-root": "$MOUNT_POINT/docker"
+    "data-root": "$DOCKER_DIR"
 }
 EOF
-    log "Restarting Docker"
     systemctl restart docker
 else
-    log "Docker already configured to use EBS volume"
+    echo "Docker already configured to use EBS volume"
 fi
 
 # Create a test notebook to verify persistence
-cat << EOF | tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
+cat << EOF > "$NOTEBOOK_DIR/test_persistence.ipynb"
 {
  "cells": [
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "# Persistence Test Notebook\n",
+    "# Persistence Test Notebook\\n",
     "If you can see this after a rebuild, persistence is working correctly."
    ]
   }
@@ -336,17 +341,17 @@ cat << EOF | tee $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
 EOF
 
 # Set correct ownership for the test notebook
-chown 1000:1000 $MOUNT_POINT/jupyter/notebooks/test_persistence.ipynb
+chown $USER_ID:$USER_ID "$NOTEBOOK_DIR/test_persistence.ipynb"
 
-# Ensure Docker daemon socket has correct permissions
-log "Setting Docker socket permissions"
-sudo chmod 666 /var/run/docker.sock
+# Ensure Docker daemon socket has correct permissions for non-root access
+echo "Setting Docker socket permissions"
+chmod 666 /var/run/docker.sock
 
-# Create .docker directory with correct permissions
-log "Setting up .docker directory"
-sudo mkdir -p /home/ubuntu/.docker
-sudo chown -R ubuntu:ubuntu /home/ubuntu/.docker
-sudo chmod 700 /home/ubuntu/.docker
+# Set up .docker directory for the default Ubuntu user
+echo "Setting up .docker directory for ubuntu user"
+mkdir -p /home/ubuntu/.docker
+chown -R ubuntu:ubuntu /home/ubuntu/.docker
+chmod 700 /home/ubuntu/.docker
 
 # Set the public IP address provided by Terraform (placeholder to be replaced)
 PUBLIC_IP="${PUBLIC_IP}"

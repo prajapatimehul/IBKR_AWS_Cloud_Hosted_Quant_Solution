@@ -61,13 +61,13 @@ services:
     volumes:
       - type: bind
         source: /docker_data/jupyter/.config
-        target: /home/gordon/.config        
+        target: /home/gordon/.config
       - type: bind
         source: /docker_data/jupyter/.local
-        target: /home/gordon/.local         
+        target: /home/gordon/.local
       - type: bind
         source: /docker_data/jupyter/notebooks
-        target: /home/gordon/Notebooks      
+        target: /home/gordon/Notebooks
     user: "1000:1000"                     
     working_dir: /home/gordon/Notebooks    
     command: >
