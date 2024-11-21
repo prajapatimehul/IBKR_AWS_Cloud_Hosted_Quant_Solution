@@ -80,12 +80,13 @@ services:
    user: "1000:1000"
    working_dir: /home/quant/Notebooks
    command: >
-     /bin/bash -c "
-     mkdir -p /home/quant/Notebooks &&
-     chown -R quant:quant /home/quant &&
-     pip install --user --no-cache-dir ibapi apscheduler &&
-     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/quant/Notebooks
-     "
+    /bin/bash -c "
+    mkdir -p /home/quant/Notebooks &&
+    id &&  # Add this line temporarily to debug
+    chown -R $(id -u):$(id -g) /home/quant &&
+    pip install --user --no-cache-dir ibapi apscheduler &&
+    jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/quant/Notebooks
+    "
 
 networks:
  default:
