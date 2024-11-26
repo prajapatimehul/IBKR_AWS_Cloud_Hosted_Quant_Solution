@@ -51,7 +51,7 @@ services:
  jupyter-quant:
    image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
    environment:
-     - USER_NAME=${JUPYTER_USER:-quant}
+     - USER_NAME=${JUPYTER_USER:-gordon}
      - JUPYTER_ENABLE_LAB=yes
      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
      - TZ=${QUANT_TZ:-America/New_York}
@@ -61,31 +61,31 @@ services:
    volumes:
      - type: bind
        source: /docker_data/jupyter/.config
-       target: /home/quant/.config
+       target: /home/gordon/.config
        bind:
          create_host_path: true
        z: true
      - type: bind
        source: /docker_data/jupyter/.local
-       target: /home/quant/.local
+       target: /home/gordon/.local
        bind:
          create_host_path: true
        z: true
      - type: bind
        source: /docker_data/jupyter/notebooks
-       target: /home/quant/Notebooks
+       target: /home/gordon/Notebooks
        bind:
          create_host_path: true
        z: true
    user: "1000:1000"
-   working_dir: /home/quant/Notebooks
+   working_dir: /home/gordon/Notebooks
    command: >
     /bin/bash -c "
-    mkdir -p /home/quant/Notebooks &&
+    mkdir -p /home/gordon/Notebooks &&
     id &&  # Add this line temporarily to debug
-    chown -R $(id -u):$(id -g) /home/quant &&
+    chown -R $(id -u):$(id -g) /home/gordon &&
     pip install --user --no-cache-dir ibapi apscheduler &&
-    jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/quant/Notebooks
+    jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
     "
 
 networks:
