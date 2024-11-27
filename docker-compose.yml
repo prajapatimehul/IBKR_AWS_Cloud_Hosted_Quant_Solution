@@ -49,45 +49,35 @@ services:
      - "4002"
 
  jupyter-quant:
-   image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
-   environment:
-     - USER_NAME=${JUPYTER_USER:-gordon}
-     - JUPYTER_ENABLE_LAB=yes
-     - JUPYTER_TOKEN=${JUPYTER_TOKEN}
-     - TZ=${QUANT_TZ:-America/New_York}
-   restart: always
-   ports:
-     - "8888:8888"
-   volumes:
-     - type: bind
-       source: /docker_data/jupyter/.config
-       target: /home/gordon/.config
-       bind:
-         create_host_path: true
-       z: true
-     - type: bind
-       source: /docker_data/jupyter/.local
-       target: /home/gordon/.local
-       bind:
-         create_host_path: true
-       z: true
-     - type: bind
-       source: /docker_data/jupyter/notebooks
-       target: /home/gordon/Notebooks
-       bind:
-         create_host_path: true
-       z: true
-   user: "ubuntu:ubuntu"
-   working_dir: /home/gordon/Notebooks
-   command: >
-    /bin/bash -c "
-    mkdir -p /home/gordon/Notebooks &&
-    id &&  # Add this line temporarily to debug
-    chown -R $(id -u):$(id -g) /home/gordon &&
-    pip install --user --no-cache-dir ibapi apscheduler &&
-    jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
-    "
+    image: gnzsnz/jupyter-quant:${QUANT_VERSION:-latest}
+    environment:
+      - USER_NAME=${JUPYTER_USER:-gordon}
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+      - TZ=${QUANT_TZ:-America/New_York}
+    restart: always
+    ports:
+      - "8888:8888"
+    volumes:
+      - type: bind
+        source: /docker_data/jupyter/.config
+        target: /home/gordon/.config
+      - type: bind
+        source: /docker_data/jupyter/.local
+        target: /home/gordon/.local
+      - type: bind
+        source: /docker_data/jupyter/notebooks
+        target: /home/gordon/Notebooks
+    user: "1000:1000"
+    working_dir: /home/gordon/Notebooks
+    command: >
+      /bin/bash -c "
+      pip install --user --no-cache-dir ibapi apscheduler &&
+      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
+      "
+    networks:
+      - default
 
 networks:
- default:
-   name: algo-trader-network
+  default:
+    name: algo-trader-network
