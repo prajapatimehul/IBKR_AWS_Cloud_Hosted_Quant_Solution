@@ -59,8 +59,8 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - /docker_data/jupyter/.config:/home/${JUPYTER_USER:-gordon}/.config
-      - /docker_data/jupyter/.local:/home/${JUPYTER_USER:-gordon}/.local
+      - /home/ec2-user/quant_conf:/home/${JUPYTER_USER:-gordon}/.config
+      - /home/ec2-user/quant_data:/home/${JUPYTER_USER:-gordon}/.local
       - /docker_data/jupyter/notebooks:/home/${JUPYTER_USER:-gordon}/Notebooks
     command: >
       /bin/bash -c "
