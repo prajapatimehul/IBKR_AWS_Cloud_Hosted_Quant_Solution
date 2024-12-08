@@ -145,7 +145,7 @@ fi
 # Move to the desired folder and copy it to the desired location
 cd /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution
 #cp -r ib-gateway-docker /home/ubuntu/ib-gateway-docker
-git checkout v1.1
+#git checkout v1.1
 
 # Clean up the rest of the repository if you don't need it
 #rm -rf /home/ubuntu/IBKR_AWS_Cloud_Hosted_Quant_Solution

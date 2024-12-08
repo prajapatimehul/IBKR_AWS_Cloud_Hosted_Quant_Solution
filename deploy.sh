@@ -296,7 +296,11 @@ echo "Please select your preferred security group configuration:"
 echo "1) Use your current IP address (recommended)"
 echo "2) Specify a new list of IP addresses or ranges (comma-separated)"
 echo "3) Open to all (0.0.0.0/0) [Not Recommended]"
-read -p "Enter your choice (1/2/3): " choice
+echo "If no choice is made within 5 seconds, defaulting to option 1."
+read -t 5 -p "Enter your choice (1/2/3): " choice
+
+# Default to choice 1 if no input is provided
+choice=${choice:-1}
 
 case $choice in
     1)

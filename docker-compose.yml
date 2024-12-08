@@ -70,11 +70,12 @@ services:
         target: /home/gordon/Notebooks
     user: "1000:1000"
     working_dir: /home/gordon/Notebooks
-    command: >
-      /bin/bash -c "
-      pip install --user --no-cache-dir ibapi apscheduler &&
-      jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
-      "
+    command: ["tail", "-f", "/dev/null"]
+    # command: >
+    #   /bin/bash -c "
+    #   pip install --user --no-cache-dir ibapi apscheduler &&
+    #   jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --NotebookApp.token='${JUPYTER_TOKEN}' --notebook-dir=/home/gordon/Notebooks
+    #   "
     networks:
       - default
 
